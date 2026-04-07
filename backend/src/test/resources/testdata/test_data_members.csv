@@ -1,0 +1,14 @@
+id,first_name,last_name,initial_last_name,gender,birth_date,death_date,birth_city,birth_country,email,telephone,street_number,plz,city
+1,Hans,Horn,Buchner,M,1930-01-01,2020-02-01,München,Deutschland,hans@horn.de,89349421412,Grimmstr. 5,80336,München
+2,Fatima,Horn,,F,1990-03-09,,München,Deutschland,fatima@horn.de,14257172152,Poccistr. 1,80336,München
+3,Greta,Horn,Bauer,F,1950-06-10,,München,Deutschland,,52352352112,,,
+4,Ahmed,Horn,,M,1950-06-02,,Berlin,Deutschland,,,,,
+5,Chantal,Horn,,F,1988-03-22,,Berlin,Deutschland,,,Lindwurmstr. 5,80336,München
+6,Kenji,Horn,,M,1991-02-21,,Berlin,Deutschland,kenji@horn.de,,,,
+7,Maria,Cortez,,F,1991-05-29,,Madrid,Spanien,,,,,
+8,Amina,Horn,,F,1930-01-01,2024-01-01,Madrid,Spanien,,,,,
+9,Luca,Friedenthal,,M,2000-01-01,,Madrid,Spanien,,,,,
+10,Omar,Friedenthal,,M,2000-01-01,,Hamburg,Deutschland,,,,,
+11,Miguel,Cortez,,M,2000-01-01,,Hamburg,Deutschland,,,,,
+12,Naomi,Friedenthal,,F,1990-01-01,,Hamburg,Deutschland,,,,,
+13,Sofia,Horn,,F,1990-01-01,,Hamburg,Deutschland,,,,,

@@ -1,0 +1,39 @@
+# ── Quarkus / Java ──────────────────────────────────────────
+target/
+*.class
+*.jar
+*.war
+hs_err_pid*
+.quarkus/
+
+# ── React / Node ─────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# ── Environment & Secrets ────────────────────────────────────
+.env
+.env.local
+*.env
+
+# ── Docker ───────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ── Keycloak ─────────────────────────────────────────────────
+# keep the realm export, ignore any local override dumps
+infra/keycloak/export-tmp/
+
+# ── IDEs ─────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+
+# ── Claude Code ──────────────────────────────────────────────
+.claude/
+
+# ── OS ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

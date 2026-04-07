@@ -1,0 +1,69 @@
+services:
+
+  mysql:
+    image: mysql:8.4
+    # Allows LOAD DATA INFILE from the init dir (needed to import CSV test data)
+    command: --secure-file-priv=/docker-entrypoint-initdb.d
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: family_tree
+      MYSQL_USER: dev_user
+      MYSQL_PASSWORD: dev_user
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      # Mapped to 3307 on host to avoid conflicts with a local MySQL instance
+      - "3307:3306"
+    volumes:
+      # Named volume: persists DB data across container restarts
+      - mysql_data:/var/lib/mysql
+      # Any .sql/.sh/.csv in this folder runs automatically on FIRST startup (empty data dir only)
+      - ./infra/mysql:/docker-entrypoint-initdb.d
+    healthcheck:
+      # Backend will wait for this to pass before starting (see depends_on)
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.6
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      # Keycloak UI + OIDC endpoints available at http://localhost:8080
+      - "8080:8080"
+    # start-dev: development mode, no TLS required, not for production
+    command: start-dev
+    volumes:
+      # Named volume: persists realm config, users etc. across restarts
+      - keycloak_data:/opt/keycloak/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      # S3-compatible API: used by the backend
+      - "9000:9000"
+      # MinIO web console: http://localhost:9001
+      - "9001:9001"
+    # Run as server with the console enabled
+    command: server /data --console-address ":9001"
+    volumes:
+      # Named volume: persists uploaded files across container restarts
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+# Named volumes managed by Docker (survive container removal, deleted with `docker compose down -v`)
+volumes:
+  mysql_data:
+  keycloak_data:
+  minio_data:

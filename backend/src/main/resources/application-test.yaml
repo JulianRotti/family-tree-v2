@@ -1,0 +1,17 @@
+quarkus:
+  datasource:
+    username: dev_user
+    password: dev_user
+    jdbc:
+      url: jdbc:mysql://localhost:3307/family_tree
+  hibernate-orm:
+    database:
+      generation: none
+  oidc:
+    enabled: false
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket: member-images
