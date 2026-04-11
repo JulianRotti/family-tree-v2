@@ -42,7 +42,7 @@ public class MemberResource implements MembersApi {
 
     @RolesAllowed("edit")
     @Override
-    public Response updateMemberById(Integer memberId, String firstName, String lastName, GenderDto gender, LocalDate birthDate, String birthCity, String birthCountry, String initialLastName, LocalDate deathDate, String email, String telephone, String streetAndNumber, String postcode, String city, InputStream imageFileInputStream) {
+    public Response updateMemberById(Integer memberId, String firstName, String lastName, GenderDto gender, LocalDate birthDate, String birthCity, String birthCountry, String initialLastName, LocalDate deathDate, String email, String telephone, String streetAndNumber, String postcode, String city, String occupation, String notes, InputStream imageFileInputStream) {
         log.atInfo().addArgument(memberId).setMessage("Updating member with id={}").log();
         MemberDto memberStored = memberService.updateMember(
                 memberId,
@@ -59,7 +59,9 @@ public class MemberResource implements MembersApi {
                         telephone,
                         streetAndNumber,
                         postcode,
-                        city
+                        city,
+                        occupation,
+                        notes
                 ),
                 imageFileInputStream
         );
@@ -71,7 +73,7 @@ public class MemberResource implements MembersApi {
 
     @RolesAllowed("create")
     @Override
-    public Response createMember(String firstName, String lastName, GenderDto gender, LocalDate birthDate, String birthCity, String birthCountry, String initialLastName, LocalDate deathDate, String email, String telephone, String streetAndNumber, String postcode, String city, InputStream imageFileInputStream) {
+    public Response createMember(String firstName, String lastName, GenderDto gender, LocalDate birthDate, String birthCity, String birthCountry, String initialLastName, LocalDate deathDate, String email, String telephone, String streetAndNumber, String postcode, String city, String occupation, String notes, InputStream imageFileInputStream) {
         log.atInfo().addArgument(firstName).addArgument(lastName).setMessage("Creating member {} {}").log();
         MemberDto memberStored = memberService.createMember(
                 memberDtoAssembler.fromFormParams(
@@ -87,7 +89,9 @@ public class MemberResource implements MembersApi {
                         telephone,
                         streetAndNumber,
                         postcode,
-                        city
+                        city,
+                        occupation,
+                        notes
                 ),
                 imageFileInputStream
         );

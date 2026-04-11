@@ -6,6 +6,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.lunskra.core.domain.FamilyTreeComponents;
+import org.lunskra.core.domain.Gender;
 import org.lunskra.core.domain.Member;
 import org.lunskra.core.domain.Relationship;
 import org.lunskra.core.domain.RelationshipType;
@@ -91,14 +92,20 @@ public class FamilyTreeRepositoryPortImpl implements FamilyTreeRepositoryPort {
 
     /**
      * Maps a single row from the second result set of {@code get_family_tree} to a
-     * {@link Member} domain object. Only {@code id}, {@code firstName} and
-     * {@code lastName} are populated; all other fields remain {@code null}.
+     * {@link Member} domain object. Only fields needed for visualisation in the frontend are filled.
      */
     private Member mapMember(ResultSet rs) throws SQLException {
         return Member.builder()
                 .id(rs.getInt("id"))
                 .firstName(rs.getString("first_name"))
                 .lastName(rs.getString("last_name"))
+                .initialLastName(rs.getString("initial_last_name"))
+                .gender(Gender.valueOf(rs.getString("gender")))
+                .birthDate(rs.getDate("birth_date") != null ? rs.getDate("birth_date").toLocalDate() : null)
+                .deathDate(rs.getDate("death_date") != null ? rs.getDate("death_date").toLocalDate() : null)
+                .birthCity(rs.getString("birth_city"))
+                .birthCountry(rs.getString("birth_country"))
+                .imagePath(rs.getString("image_path"))
                 .build();
     }
 }

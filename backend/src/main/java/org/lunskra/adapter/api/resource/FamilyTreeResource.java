@@ -6,9 +6,14 @@ import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lunskra.adapter.api.mapper.FamilyTreeDtoMapper;
+import org.lunskra.adapter.api.service.MemberService;
 import org.lunskra.core.domain.FamilyTree;
 import org.lunskra.family_tree.api.FamilyTreeApi;
+import org.lunskra.family_tree.api.model.FamilyTreeResponseDto;
+import org.lunskra.family_tree.api.model.MemberDto;
 import org.lunskra.port.in.GenerateFamilyTreeUseCase;
+
+import java.util.List;
 
 /**
  * REST adapter exposing the family-tree generation use case.
@@ -21,6 +26,7 @@ public class FamilyTreeResource implements FamilyTreeApi {
 
     private final GenerateFamilyTreeUseCase generateFamilyTreeUseCase;
     private final FamilyTreeDtoMapper mapper;
+    private final MemberService service;
 
     @RolesAllowed("view")
     @Override
@@ -30,10 +36,12 @@ public class FamilyTreeResource implements FamilyTreeApi {
             Float spaceBetweenMemberAndSpouse,
             Float spaceBetweenChildren
     ) {
-        FamilyTree famTree = generateFamilyTreeUseCase.generateFamilyTree(
+        FamilyTreeResponseDto response = mapper.toDto(generateFamilyTreeUseCase.generateFamilyTree(
                 memberId, widthOfMemberNode, spaceBetweenMemberAndSpouse, spaceBetweenChildren
-        );
+        ));
 
-        return Response.ok(mapper.toDto(famTree)).build();
+        response.getMembers().forEach(service::resolveImageUrl);
+
+        return Response.ok(response).build();
     }
 }

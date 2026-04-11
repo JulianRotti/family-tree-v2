@@ -40,6 +40,8 @@ public class Member {
     private String streetAndNumber;
     private String postcode;
     private String city;
+    private String occupation;
+    private String notes;
     /** Object-storage key of the member's profile image; {@code null} if no image was uploaded. */
     private String imagePath;
 }

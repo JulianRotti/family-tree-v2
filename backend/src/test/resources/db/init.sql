@@ -26,6 +26,8 @@ CREATE TABLE members (
     plz VARCHAR(10),
     city VARCHAR(50),
     image_path VARCHAR(255),
+    occupation VARCHAR(100),
+    notes VARCHAR(500),
     UNIQUE KEY unique_member (first_name, last_name, birth_date)
 ) ENGINE=InnoDB;
 

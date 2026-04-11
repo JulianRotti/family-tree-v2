@@ -74,6 +74,12 @@ public class MemberEntity {
     @Column(name = "city", length = 50)
     public String city;
 
+    @Column(name = "occupation", length = 100)
+    public String occupation;
+
+    @Column(name = "notes", length = 500)
+    public String notes;
+
     @Column(name = "image_path", length = 255)
     public String imagePath;
 }

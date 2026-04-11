@@ -32,9 +32,15 @@ public final class MemberDtoAssembler {
     private static final String STREET_NUMBER_PATTERN = "^$|^[\\p{L} .'-]+\\s+\\d+[\\p{L}\\d/ -]*$";
     private final String STREET_NUMBER_MESSAGE = "Must be like Müllerstraße 12, Hauptstr. 5, Goethe-Straße 7A";
 
+    private final String OCCUPATION_PATTERN = "^$|^[A-Za-zÄÖÜäöüß()\\s-]{1,100}$";
+    private final String OCCUPATION_MESSAGE = "Only letters, hyphens, spaces, parentheses, and umlauts are allowed (max. 100 characters)";
+
+    private final String NOTES_PATTERN = "^$|^[A-Za-zÄÖÜäöüß0-9\\s.,!?;:()\\-\"'/@#&+=%]{1,500}$";
+    private final String NOTES_MESSAGE = "Only letters, digits, common punctuation, and umlauts are allowed (max. 500 characters)";
+
     public MemberDto fromFormParams(
         @NotBlank @Pattern(regexp = NAME_PATTERN, message = NAME_MESSAGE) String firstName,
-        @NotBlank @Pattern(regexp = NAME_PATTERN, message = NAME_MESSAGE)String lastName,
+        @NotBlank @Pattern(regexp = NAME_PATTERN, message = NAME_MESSAGE) String lastName,
         @Pattern(regexp = NAME_PATTERN, message = NAME_MESSAGE) String initialLastName,
         @NotNull GenderDto gender,
         @NotNull LocalDate birthDate,
@@ -45,7 +51,9 @@ public final class MemberDtoAssembler {
         @Pattern(regexp = TELEPHONE_PATTERN, message = TELEPHONE_MESSAGE) String telephone,
         @Pattern(regexp = STREET_NUMBER_PATTERN, message = STREET_NUMBER_MESSAGE) String streetAndNumber,
         String postcode,
-        @Pattern(regexp = CITY_PATTERN, message = CITY_MESSAGE) String city
+        @Pattern(regexp = CITY_PATTERN, message = CITY_MESSAGE) String city,
+        @Pattern(regexp = OCCUPATION_PATTERN, message = OCCUPATION_MESSAGE) String occupation,
+        @Pattern(regexp = NOTES_PATTERN, message = NOTES_MESSAGE)  String notes
     ) {
         return new MemberDto()
             .firstName(firstName)
@@ -60,6 +68,8 @@ public final class MemberDtoAssembler {
             .telephone(telephone)
             .streetAndNumber(streetAndNumber)
             .postcode(postcode)
-            .city(city);
+            .city(city)
+            .occupation(occupation)
+            .notes(notes);
     }
 }

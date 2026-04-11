@@ -651,6 +651,16 @@ components:
           maxLength: 50
           nullable: true
           description: Current city of residence.
+        occupation:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: Last known occupation.
+        notes:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Notes about the member.
 
     ImageFile:
       type: string

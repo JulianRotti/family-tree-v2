@@ -108,7 +108,7 @@ public class MemberService {
      * Replaces the stored object-storage key in the DTO with a presigned GET URL
      * valid for 60 minutes. Has no effect when {@code imageFilePath} is absent or blank.
      */
-    private void resolveImageUrl(MemberDto member) {
+    public void resolveImageUrl(MemberDto member) {
         if (member.getImageFilePath() != null && !member.getImageFilePath().isBlank()) {
             String presignedUrl = imageStoragePort.generatePresignedUrl(member.getImageFilePath());
             member.setImageFilePath(presignedUrl);
