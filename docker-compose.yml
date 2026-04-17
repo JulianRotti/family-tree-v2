@@ -96,6 +96,9 @@ services:
       - family-tree
     environment:
       API_BASE_URL: ${API_BASE_URL}
+      KEYCLOAK_URL: ${KEYCLOAK_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
     ports:
       - "3000:3000"
     depends_on:
