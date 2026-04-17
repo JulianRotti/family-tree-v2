@@ -5,15 +5,19 @@ import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lunskra.adapter.api.mapper.MemberDtoAssembler;
+import org.lunskra.adapter.api.service.BulkMemberService;
+import org.lunskra.adapter.api.service.CsvMemberParser;
 import org.lunskra.adapter.api.service.MemberService;
 import org.lunskra.family_tree.api.MembersApi;
 import org.lunskra.family_tree.api.model.GenderDto;
+import org.lunskra.family_tree.api.model.MemberBulkRequestDto;
 import org.lunskra.family_tree.api.model.MemberDto;
 import org.lunskra.family_tree.api.model.MemberPageDto;
 
 import java.io.InputStream;
 import java.net.URI;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * REST adapter for member CRUD operations.
@@ -28,6 +32,8 @@ import java.time.LocalDate;
 public class MemberResource implements MembersApi {
 
     private final MemberService memberService;
+    private final BulkMemberService bulkMemberService;
+    private final CsvMemberParser csvMemberParser;
     private final MemberDtoAssembler memberDtoAssembler;
 
     @RolesAllowed("view")
@@ -42,7 +48,7 @@ public class MemberResource implements MembersApi {
 
     @RolesAllowed("edit")
     @Override
-    public Response updateMemberById(Integer memberId, String firstName, String lastName, GenderDto gender, LocalDate birthDate, String birthCity, String birthCountry, String initialLastName, LocalDate deathDate, String email, String telephone, String streetAndNumber, String postcode, String city, String occupation, String notes, InputStream imageFileInputStream) {
+    public Response updateMemberById(Integer memberId, String firstName, String lastName, GenderDto gender, LocalDate birthDate, String birthCity, String birthCountry, String initialLastName, LocalDate deathDate, String email, String telephone, String streetAndNumber, String postcode, String city, String occupation, String notes, Double birthLat, Double birthLng, InputStream imageFileInputStream) {
         log.atInfo().addArgument(memberId).setMessage("Updating member with id={}").log();
         MemberDto memberStored = memberService.updateMember(
                 memberId,
@@ -61,7 +67,9 @@ public class MemberResource implements MembersApi {
                         postcode,
                         city,
                         occupation,
-                        notes
+                        notes,
+                        birthLat,
+                        birthLng
                 ),
                 imageFileInputStream
         );
@@ -73,7 +81,7 @@ public class MemberResource implements MembersApi {
 
     @RolesAllowed("create")
     @Override
-    public Response createMember(String firstName, String lastName, GenderDto gender, LocalDate birthDate, String birthCity, String birthCountry, String initialLastName, LocalDate deathDate, String email, String telephone, String streetAndNumber, String postcode, String city, String occupation, String notes, InputStream imageFileInputStream) {
+    public Response createMember(String firstName, String lastName, GenderDto gender, LocalDate birthDate, String birthCity, String birthCountry, String initialLastName, LocalDate deathDate, String email, String telephone, String streetAndNumber, String postcode, String city, String occupation, String notes, Double birthLat, Double birthLng, InputStream imageFileInputStream) {
         log.atInfo().addArgument(firstName).addArgument(lastName).setMessage("Creating member {} {}").log();
         MemberDto memberStored = memberService.createMember(
                 memberDtoAssembler.fromFormParams(
@@ -91,7 +99,9 @@ public class MemberResource implements MembersApi {
                         postcode,
                         city,
                         occupation,
-                        notes
+                        notes,
+                        birthLat,
+                        birthLng
                 ),
                 imageFileInputStream
         );
@@ -114,6 +124,38 @@ public class MemberResource implements MembersApi {
     public Response getMemberById(Integer memberId) {
         log.atInfo().addArgument(memberId).setMessage("Getting member with id={}").log();
         return Response.ok(memberService.getMember(memberId)).build();
+    }
+
+    @RolesAllowed("view")
+    @Override
+    public Response getBulkCsvTemplate() {
+        String csv = CsvMemberParser.TEMPLATE_HEADERS + "\n" + CsvMemberParser.TEMPLATE_EXAMPLE + "\n";
+        return Response.ok(csv)
+                .header("Content-Disposition", "attachment; filename=\"member-template.csv\"")
+                .type("text/csv; charset=UTF-8")
+                .build();
+    }
+
+    @RolesAllowed("create")
+    @Override
+    public Response bulkCreateMembersFromCsv(InputStream fileInputStream) {
+        log.atInfo().setMessage("Processing CSV bulk member upload").log();
+        List<MemberBulkRequestDto> parsed = csvMemberParser.parse(fileInputStream);
+        return Response.ok(bulkMemberService.bulkCreateMembers(parsed)).build();
+    }
+
+    @RolesAllowed("view")
+    @Override
+    public Response getUnresolvedLocations() {
+        log.atInfo().setMessage("Fetching members with unresolved birth coordinates").log();
+        return Response.ok(memberService.getUnresolvedLocations()).build();
+    }
+
+    @RolesAllowed("edit")
+    @Override
+    public Response resolveLocations() {
+        log.atInfo().setMessage("Triggering location resolution for unresolved members").log();
+        return Response.ok(memberService.resolveLocations()).build();
     }
 
 }

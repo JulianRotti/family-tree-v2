@@ -21,8 +21,8 @@ public class RelationshipFinder {
      * @param relationships All relevant relationships of the family tree to be built
      * @return Map of the like: [{ spouseId1: {childId1, childId2, ...}}, { spouseId2: {childId3, childId4, ...}}, ... ]
      */
-    public Map<Spouse, List<Integer>> findSpousesWithChildren(Integer memberId, List<Relationship> relationships) {
-        Map<Spouse, List<Integer>> map = new HashMap<>();
+    public Map<SpouseRecord, List<Integer>> findSpousesWithChildren(Integer memberId, List<Relationship> relationships) {
+        Map<SpouseRecord, List<Integer>> map = new HashMap<>();
 
         relationships.stream()
                 // Filter all spouses and ex-spouses of memberId
@@ -34,7 +34,7 @@ public class RelationshipFinder {
                 .map(r ->
                 {
                     Integer spouseId = Objects.equals(r.getFirstMemberId(), memberId) ? r.getSecondMemberId() : r.getFirstMemberId();
-                    return new Spouse(spouseId, r.getRelationshipType());
+                    return new SpouseRecord(spouseId, r.getRelationshipType());
                 })
                 // add key Spouse with list of ids of children as value
                 .forEach( s -> {
@@ -72,9 +72,37 @@ public class RelationshipFinder {
     }
 
     /**
+     * Filters for all parents of memberId. If there are two known parents in database, also return the relationship type.
+     * @param memberId Member-Id
+     * @param relationships All relevant relationships of the family tree to be built
+     * @return List of parent ids and their relationship if there are two known parents
+     */
+    public ParentRecord findParents(Integer memberId, List<Relationship> relationships) {
+        List<Integer> parents = relationships.stream()
+                .filter(r -> Objects.equals(r.getRelationshipType(), RelationshipType.PARENT))
+                .filter(r -> Objects.equals(r.getSecondMemberId(), memberId))
+                .map(Relationship::getFirstMemberId)
+                .toList();
+
+
+        RelationshipType type = (parents.size() == 2) ? relationships.stream()
+                .filter(r ->
+                        (Objects.equals(r.getFirstMemberId(), parents.getFirst()) && Objects.equals(r.getSecondMemberId(), parents.getLast()))
+                        ||
+                        (Objects.equals(r.getSecondMemberId(), parents.getFirst()) && Objects.equals(r.getFirstMemberId(), parents.getLast()))
+                )
+                .map(Relationship::getRelationshipType)
+                .findFirst().orElse(null) : null;
+
+        return new ParentRecord(new HashSet<>(parents), type);
+    }
+
+    /**
      * Record to hold a spouse and the relationship.
      * @param memberId id of the spouse
      * @param type relationship type
      */
-    public record Spouse(Integer memberId, RelationshipType type) {};
+    public record SpouseRecord(Integer memberId, RelationshipType type) {};
+
+    public record ParentRecord(Set<Integer> parentIds, RelationshipType type) {};
 }

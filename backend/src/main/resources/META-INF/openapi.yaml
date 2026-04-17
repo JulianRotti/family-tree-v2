@@ -8,6 +8,10 @@ info:
     Image handling:
     - Internal DB stores a persistent image path/reference.
     - On GET, the backend may transform that reference into a one-time URL and returns it via `imagePath`.
+
+    Authentication:
+    - All endpoints require a valid JWT obtained from Keycloak.
+    - Pass the token in the `Authorization` header as: `Authorization: Bearer <JWT>`
 servers:
   - url: /
 
@@ -15,9 +19,11 @@ tags:
   - name: Members
   - name: Relationships
   - name: FamilyTree
+  - name: Geocode
 
 security:
-  - keycloak: []
+  - bearerAuth: []
+  - keycloak: [openid]
 
 paths:
   /api/members:
@@ -69,6 +75,8 @@ paths:
                 $ref: "#/components/schemas/MemberPageDto"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -103,6 +111,8 @@ paths:
                 $ref: "#/components/schemas/MemberDto"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "409":
           $ref: "#/components/responses/Conflict"
         "500":
@@ -126,6 +136,8 @@ paths:
                 $ref: "#/components/schemas/MemberDto"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
         "500":
@@ -161,6 +173,8 @@ paths:
                 $ref: "#/components/schemas/MemberDto"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
@@ -177,10 +191,180 @@ paths:
       responses:
         "204":
           description: Member deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/members/bulk/csv/template:
+    get:
+      tags: [Members]
+      operationId: getBulkCsvTemplate
+      summary: Download a CSV template for bulk member upload
+      description: |
+        Returns a CSV file with the required column headers and one example row.
+        Fill in the data in Excel (or any spreadsheet tool) and upload via
+        POST /api/members/bulk/csv.
+      responses:
+        "200":
+          description: CSV template file.
+          content:
+            text/csv:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/members/bulk/csv:
+    post:
+      tags: [Members]
+      operationId: bulkCreateMembersFromCsv
+      summary: Bulk-create members from a CSV file
+      description: |
+        Upload a CSV file exported from Excel or any spreadsheet tool.
+        The first row must contain column headers (case-insensitive).
+        Both comma (,) and semicolon (;) delimiters are accepted.
+        lat/lng are not required — they are resolved automatically from GeoNames.
+        Best-effort: valid rows are saved, invalid rows are returned in `failed`.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The CSV file to upload.
+      responses:
+        "200":
+          description: Bulk result with created members and any failures.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkUploadResultDto"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/members/unresolved-locations:
+    get:
+      tags: [Members]
+      operationId: getUnresolvedLocations
+      summary: List members without resolved coordinates
+      description: |
+        Returns all members where birth coordinates (lat/lng) are missing.
+        No resolution is attempted; this is a pure read of the current DB state.
+      responses:
+        "200":
+          description: List of unresolved members (possibly empty). Suggestions are always empty.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UnresolvedLocationDto"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/members/resolve-locations:
+    post:
+      tags: [Members]
+      operationId: resolveLocations
+      summary: Attempt to auto-resolve missing birth coordinates
+      description: |
+        For each member without coordinates:
+        - If birthCity + birthCountry yield an exact GeoNames match, coordinates are written to the DB (member removed from result).
+        - If no exact match, the member is returned with up to 5 city suggestions from a prefix search.
+        - If birthCity or birthCountry is absent, the member is returned with an empty suggestions list.
+      responses:
+        "200":
+          description: Members that could not be auto-resolved, with any available city suggestions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UnresolvedLocationDto"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/geocode/countries:
+    get:
+      tags: [Geocode]
+      operationId: getCountries
+      summary: Search countries by name prefix (case-insensitive)
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Name prefix to search for (minimum 1 character).
+      responses:
+        "200":
+          description: List of matching countries (up to 20).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CountrySuggestionDto"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/geocode/cities:
+    get:
+      tags: [Geocode]
+      operationId: getCities
+      summary: Search cities by ascii name prefix (case-insensitive), ordered by population
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          description: ASCII name prefix to search for (minimum 2 characters).
+        - in: query
+          name: country
+          required: false
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+          description: Optional ISO 3166-1 alpha-2 country code to restrict results.
+      responses:
+        "200":
+          description: List of matching cities (up to 8), ordered by population descending.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CitySuggestionDto"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -198,6 +382,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RelationshipDto"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -226,6 +412,8 @@ paths:
                 $ref: "#/components/schemas/RelationshipDto"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
@@ -250,6 +438,8 @@ paths:
                 $ref: "#/components/schemas/RelationshipDto"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
         "500":
@@ -277,6 +467,8 @@ paths:
                 $ref: "#/components/schemas/RelationshipDto"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
         "500":
@@ -292,6 +484,8 @@ paths:
       responses:
         "204":
           description: Relationship deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
         "500":
@@ -303,7 +497,7 @@ paths:
       operationId: getFamilyTreeByHeadMemberId
       summary: Get family tree for a member (layout-aware)
       description: |
-        Computes the family tree for the given memberId. The layout parameters influence
+        Computes the family tree for the given memberId for the predecessors generations. The layout parameters influence
         subtreeLength computation.
       parameters:
         - $ref: "#/components/parameters/MemberIdPath"
@@ -334,6 +528,15 @@ paths:
             format: float
             minimum: 0
             example: 32
+        - in: query
+          name: maxDepth
+          required: false
+          description: Maximum number of descendant generations to include. Omit or set to null for all generations.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            nullable: true
       responses:
         "200":
           description: Family tree response containing the tree and referenced members.
@@ -343,6 +546,63 @@ paths:
                 $ref: "#/components/schemas/FamilyTreeResponseDto"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/family-tree-ancestor/{memberId}:
+    get:
+      tags: [FamilyTreeAncestor]
+      operationId: getFamilyTreeAncestorByChildMemberId
+      summary: Get ancestors family tree for a member (layout-aware)
+      description: |
+        Computes the family tree for the given memberId for the ancestors generations. The layout parameters 
+        influence subtreeLength computation.
+      parameters:
+        - $ref: "#/components/parameters/MemberIdPath"
+        - in: query
+          name: widthOfMemberNode
+          required: true
+          description: Width of a single member node (layout unit, e.g. px).
+          schema:
+            type: number
+            format: float
+            exclusiveMinimum: 0
+            example: 160
+        - in: query
+          name: spaceBetweenMemberNodes
+          required: true
+          description: Horizontal spacing between two member nodes (layout unit, e.g. px).
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            example: 24
+        - in: query
+          name: maxDepth
+          required: false
+          description: Maximum number of ancestor generations to include. Omit or set to null for all generations.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            nullable: true
+      responses:
+        "200":
+          description: Ancestor family tree response containing the tree and referenced members.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyTreeAncestorResponseDto"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
@@ -352,8 +612,22 @@ paths:
 
 components:
   securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT obtained from Keycloak. Pass it in the Authorization header:
+          Authorization: Bearer <JWT>
+        
+        Obtain a token from the Keycloak token endpoint:
+          POST http://localhost:8080/realms/family-tree/protocol/openid-connect/token
+
     keycloak:
       type: oauth2
+      description: |
+        OAuth2 Authorization Code flow — for use with Swagger UI in development only.
+        Swagger UI will handle the redirect and attach the resulting JWT automatically.
       flows:
         authorizationCode:
           authorizationUrl: http://localhost:8080/realms/family-tree/protocol/openid-connect/auth
@@ -411,6 +685,22 @@ components:
                 errors:
                   - field: birthDate
                     message: must be a valid date
+
+    Unauthorized:
+      description: Missing or invalid Authorization header / expired JWT.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetailsDto"
+          examples:
+            unauthorized:
+              summary: Unauthorized
+              value:
+                type: https://example.com/problems/unauthorized
+                title: Unauthorized
+                status: 401
+                detail: Authorization header is missing, malformed, or the JWT has expired.
+                instance: /api/members
 
     NotFound:
       description: Resource not found.
@@ -560,9 +850,9 @@ components:
 
     MemberRequestDto:
       description: |
-        Payload for creating a member.
+        Payload for creating or updating a single member.
         Sent as multipart/form-data with:
-        - Flattened MemberMedataDataDto
+        - Flattened MemberMetadataDto fields (id excluded — IDs are auto-generated for single-member operations)
         - `imageFile` as an optional binary file upload.
       allOf:
         - $ref: "#/components/schemas/MemberMetadataDto"
@@ -570,6 +860,15 @@ components:
           properties:
             imageFile:
               $ref: "#/components/schemas/ImageFile"
+
+    MemberBulkRequestDto:
+      description: |
+        Payload for creating or updating a single member.
+        Sent as multipart/form-data with:
+        - Flattened MemberMetadataDto fields (id included for bulk upload)
+      allOf:
+        - $ref: "#/components/schemas/MemberIdDto"
+        - $ref: "#/components/schemas/MemberMetadataDto"
 
     MemberIdDto:
       type: object
@@ -661,6 +960,97 @@ components:
           maxLength: 500
           nullable: true
           description: Notes about the member.
+        birthLat:
+          type: number
+          format: double
+          nullable: true
+          description: Latitude of the birth city, provided by the frontend from autocomplete selection.
+        birthLng:
+          type: number
+          format: double
+          nullable: true
+          description: Longitude of the birth city, provided by the frontend from autocomplete selection.
+
+    BulkUploadResultDto:
+      type: object
+      description: Result of a bulk member creation request.
+      properties:
+        created:
+          type: array
+          description: Members that were successfully validated and persisted.
+          items:
+            $ref: "#/components/schemas/MemberDto"
+        failed:
+          type: array
+          description: Entries that could not be saved, with the validation errors that caused the failure.
+          items:
+            $ref: "#/components/schemas/BulkUploadFailureDto"
+      required: [created, failed]
+
+    BulkUploadFailureDto:
+      type: object
+      description: A single failed entry from a bulk upload request.
+      properties:
+        input:
+          $ref: "#/components/schemas/MemberBulkRequestDto"
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldErrorDto"
+      required: [input, errors]
+
+    UnresolvedLocationDto:
+      type: object
+      description: |
+        A member whose birth coordinates could not be (or have not yet been) resolved,
+        together with any GeoNames city candidates that may help an admin pick the right one.
+      properties:
+        member:
+          $ref: "#/components/schemas/MemberDto"
+        suggestions:
+          type: array
+          description: |
+            Candidate cities from GeoNames. Populated by POST /resolve-locations when
+            birthCity/birthCountry are present but no exact match was found.
+            Empty on GET /unresolved-locations and when no city/country is stored.
+          items:
+            $ref: "#/components/schemas/CitySuggestionDto"
+      required: [member, suggestions]
+
+    CountrySuggestionDto:
+      type: object
+      description: A country suggestion returned by the geocode countries endpoint.
+      properties:
+        code:
+          type: string
+          description: ISO 3166-1 alpha-2 country code.
+        name:
+          type: string
+          description: Human-readable country name.
+      required: [code, name]
+
+    CitySuggestionDto:
+      type: object
+      description: A city suggestion returned by the geocode cities endpoint.
+      properties:
+        name:
+          type: string
+          description: City display name.
+        countryCode:
+          type: string
+          description: ISO 3166-1 alpha-2 country code.
+        countryName:
+          type: string
+          description: Human-readable country name.
+        lat:
+          type: number
+          format: double
+          description: Latitude.
+        lng:
+          type: number
+          format: double
+          description: Longitude.
+      required: [name, countryCode, countryName, lat, lng]
 
     ImageFile:
       type: string
@@ -730,6 +1120,10 @@ components:
         subtreeLength:
           type: number
           format: float
+        generation:
+          type: number
+          format: int32
+          description: the generation (respective to the head member) of this member.
         family:
           type: array
           nullable: true
@@ -745,6 +1139,18 @@ components:
         headMemberId:
           type: integer
           format: int32
+        numberTotal:
+          type: integer
+          format: int32
+          description: Total number of members in tree.
+        numberLiving:
+          type: integer
+          format: int32
+          description: Total number of living members in tree.
+        numberGenerations:
+          type: integer
+          format: in32
+          description: Number of generations in tree.
         tree:
           $ref: "#/components/schemas/FamilyTreeOfMemberDto"
         members:
@@ -753,5 +1159,65 @@ components:
             $ref: "#/components/schemas/MemberDto"
       required:
         - headMemberId
+        - numberTotal
+        - numberLiving
+        - numberGenerations
         - tree
         - members
+
+    FamilyTreeAncestorOfMemberDto:
+      type: object
+      properties:
+        memberId:
+          type: integer
+          format: int32
+        subtreeLength:
+          type: number
+          format: float
+        generation:
+          type: number
+          format: int32
+          description: the generation (respective to the child member) of this member.
+        parents:
+          $ref: "#/components/schemas/ParentsDto"
+      required:
+        - memberId
+        - subtreeLength
+
+    ParentsDto:
+      type: object
+      properties:
+        parents:
+          type: array
+          minItems: 0
+          maxItems: 2
+          items:
+            $ref: "#/components/schemas/FamilyTreeAncestorOfMemberDto"
+        relationship:
+          nullable: true
+          $ref: "#/components/schemas/SpouseRelationshipTypeDto"
+
+    FamilyTreeAncestorResponseDto:
+      type: object
+      properties:
+        childMemberId:
+          type: integer
+          format: int32
+        numberTotal:
+          type: integer
+          format: int32
+          description: Total number of members in tree.
+        numberLiving:
+          type: integer
+          format: int32
+          description: Total number of living members in tree.
+        numberGenerations:
+          type: integer
+          format: in32
+          description: Number of generations in tree.
+        tree:
+          $ref: "#/components/schemas/FamilyTreeAncestorOfMemberDto"
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberDto"

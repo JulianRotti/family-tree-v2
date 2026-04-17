@@ -8,44 +8,102 @@ my-app/
 ├── frontend/         # React app
 ├── infra/
 │   ├── keycloak/     # Keycloak realm export (backup/restore)
-│   └── mysql/        # Schema, init scripts, and test data
+│   └── mysql/        # Schema, init scripts, test data, and GeoNames data
 ├── docker-compose.yml
+├── dl_and_prepare_location_data.sh
+├── Makefile
 └── README.md
 ```
+
+---
+
+## Prerequisites
+
+- Docker
+- `make`
+- `curl`
+- `unzip`
 
 ---
 
 ## Quick Start
 
 ```bash
-docker compose up
+make up
 ```
 
-Starts MySQL, Keycloak, and MinIO. MySQL automatically runs the init scripts
-(`01_schema.sql`, `02_fill_test_data.sql`) on first startup.
+On first run this will:
+1. Download and prepare GeoNames city/country data (if not already present)
+2. Start MySQL, Keycloak, and MinIO
+
+MySQL automatically runs the init scripts on first startup (empty volume only):
+`01_schema.sql`, `02_fill_test_data.sql`, `03_geonames_schema.sql`, `04_geonames_data.sql`
 
 ```bash
-docker compose up -d   # run in background
-docker compose down    # stop all containers
+make up              # download geo data if missing, then start stack
+docker compose up -d # start stack only (assumes geo data already present)
+docker compose down  # stop all containers
 ```
 
 ---
 
 ## Services Overview
 
-| Service   | URL                                       | Credentials               |
-|-----------|-------------------------------------------|---------------------------|
-| Keycloak  | [http://localhost:8080](http://localhost:8080) | `admin` / `admin`     |
-| MinIO API | `http://localhost:9000`                   | `minioadmin` / `minioadmin` |
+| Service   | URL                                           | Credentials                 |
+|-----------|-----------------------------------------------|-----------------------------|
+| Keycloak  | [http://localhost:8080](http://localhost:8080) | `admin` / `admin`           |
+| MinIO API | `http://localhost:9000`                       | `minioadmin` / `minioadmin` |
 | MinIO UI  | [http://localhost:9001](http://localhost:9001) | `minioadmin` / `minioadmin` |
 
 ---
 
-## MinIO (Image Storage)
+## GeoNames Location Data
 
-Member profile images are stored in [MinIO](https://min.io/), an S3-compatible object store running as a local container.
+City and country autocomplete is powered by an offline
+[GeoNames](https://download.geonames.org/export/dump/) dataset loaded directly
+into MySQL. No external geocoding service is used at runtime.
 
-The bucket `member-images` is created automatically on first backend startup. Image data persists across container restarts via the named Docker volume `minio_data`.
+The prepared TSV files (`cities_slim.tsv`, `countries_slim.tsv`) are gitignored
+since they are auto-generated. `make up` downloads and prepares them
+automatically if they are missing.
+
+```bash
+make geodata          # download/prepare only, don't start stack
+make geodata-refresh  # force re-download even if files already exist
+```
+
+> The dataset adds ~30MB to MySQL. This is negligible and has no meaningful
+> impact on container startup time or memory usage.
+
+---
+
+## Data Management
+
+### Resetting the Database
+
+MySQL only runs the init scripts on an **empty data volume**. To force a full
+reload (e.g. after schema changes or to re-import GeoNames data):
+
+```bash
+make reset-db
+```
+
+Or manually:
+
+```bash
+docker rm -f mysql
+docker volume rm $(docker volume ls -q | grep mysql)
+make up
+```
+
+> ⚠️ This wipes all database content including GeoNames data (which will be
+> re-imported automatically). Keycloak users and realm config are unaffected.
+
+### Wiping Stored Images (MinIO)
+
+Member profile images are stored in [MinIO](https://min.io/), an S3-compatible
+object store. The bucket `member-images` is created automatically on first
+backend startup. Image data persists across restarts via the `minio_data` volume.
 
 To wipe all stored images:
 
@@ -55,30 +113,29 @@ docker volume rm $(docker volume ls -q | grep minio)
 
 > This only removes MinIO data. MySQL and Keycloak volumes are unaffected.
 
----
+### Wiping Everything
 
-## Resetting the Database
-
-MySQL only runs the init scripts on an **empty data volume**. To force a full reload:
+To wipe all volumes at once (database, images, and Keycloak config):
 
 ```bash
-docker rm -f mysql
-docker volume rm $(docker volume ls -q | grep mysql)
-docker compose up
+docker compose down -v
 ```
 
-> ⚠️ This wipes all database content. Keycloak users and realm config are unaffected.
+> ⚠️ This includes Keycloak — you will need to redo the one-time Keycloak setup
+> described below.
 
 ---
 
 ## Keycloak Setup (First Time Only)
 
-Keycloak config is **persisted in a Docker volume** (`keycloak_data`), so this setup only needs to be done once. It survives container restarts as long as you don't run `docker compose down -v`.
+Keycloak config is **persisted in a Docker volume** (`keycloak_data`), so this
+setup only needs to be done once. It survives container restarts as long as you
+don't wipe the volume.
 
 ### 1. Start the Containers
 
 ```bash
-docker compose up
+make up
 ```
 
 ### 2. Log in to the Admin Console
@@ -117,7 +174,7 @@ Used for local/dev testing of API endpoints via Swagger UI.
 | Client Authentication | Off (public client) |
 
 #### `family-tree-backend`
-Used by the Quarkus backend to validate incoming tokens. No client secret is needed — the backend only checks JWTs using Keycloak's public JWKS endpoint.
+Used by the Quarkus backend to validate incoming tokens.
 
 | Setting | Value |
 |---|---|
@@ -127,18 +184,17 @@ Used by the Quarkus backend to validate incoming tokens. No client secret is nee
 
 ### 5. Add an Audience Mapper
 
-Quarkus validates that incoming tokens contain `family-tree-backend` in their `aud` (audience) claim. Tokens issued to the frontend don't include this by default, so you need to add a mapper.
+Quarkus validates that incoming tokens contain `family-tree-backend` in their
+`aud` claim. Tokens issued to the frontend don't include this by default.
 
 1. Go to **Clients → `family-tree-frontend` → Client scopes**
-2. Click the dedicated scope (named `family-tree-frontend-dedicated`)
+2. Click the dedicated scope (`family-tree-frontend-dedicated`)
 3. Click **Add mapper → By configuration → Audience**
 4. Set **Included Client Audience** to `family-tree-backend` and save
 
-Tokens issued to the frontend will now include `family-tree-backend` in their audience, and the backend will accept them.
+### 6. Create Roles
 
-### 5. Create Roles
-
-Go to **Realm roles → Create role** and add the following roles:
+Go to **Realm roles → Create role** and add:
 
 | Role | Description |
 |---|---|
@@ -147,17 +203,18 @@ Go to **Realm roles → Create role** and add the following roles:
 | `create` | Can add new members or records |
 | `delete` | Can remove members or records |
 
-### 6. Create Users
+### 7. Create Users
 
 1. Go to **Users → Add user**, fill in a username, and save
-2. Under the **Credentials** tab, set a password — disable **Temporary** to skip forced reset on first login
-3. Under the **Role mapping** tab, assign one or more roles (`view`, `edit`, `create`, `delete`)
+2. Under **Credentials**, set a password — disable **Temporary** to skip forced reset
+3. Under **Role mapping**, assign one or more roles
 
 ---
 
 ## Backing Up Keycloak Config
 
-Export the realm after setup so it can be restored without repeating the manual steps above:
+Export the realm after setup so it can be restored without repeating the manual
+steps above:
 
 ```bash
 docker exec keycloak \
@@ -170,4 +227,5 @@ docker cp keycloak:/tmp/export/family-tree-realm.json \
   infra/keycloak/realm-export.json
 ```
 
-Commit `infra/keycloak/realm-export.json` to version control. This is your source of truth if the Keycloak volume is ever lost.
+Commit `infra/keycloak/realm-export.json` to version control. This is your
+source of truth if the Keycloak volume is ever lost.

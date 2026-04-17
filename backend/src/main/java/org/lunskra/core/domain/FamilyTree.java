@@ -24,6 +24,12 @@ import java.util.List;
 public class FamilyTree {
     /** ID of the member at the root of the tree. */
     private Integer headOfFamilyId;
+    /** Total number of family members in the tree. */
+    private Integer numberTotal;
+    /** Number of living family members in the tree. */
+    private Integer numberLiving;
+    /** Number of generations in the tree. */
+    private Integer numberGenerations;
     /** Recursive tree structure starting at the head-of-family member. */
     private FamilyTreeOfMember tree;
     /** Flat list of all members referenced anywhere in {@link #tree}. */

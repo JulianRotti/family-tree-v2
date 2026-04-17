@@ -15,6 +15,7 @@ import org.lunskra.port.out.FamilyTreeRepositoryPort;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,15 +40,28 @@ public class FamilyTreeRepositoryPortImpl implements FamilyTreeRepositoryPort {
 
     @Override
     @Transactional
-    public FamilyTreeComponents getFamilyTreeComponents(Integer headOfFamilyId) {
+    public FamilyTreeComponents getFamilyTreeComponents(Integer headOfFamilyId, Integer maxDepth) {
+        return callProcedure(headOfFamilyId, maxDepth, "{CALL get_family_tree(?, ?)}");
+    }
 
+    @Override
+    public FamilyTreeComponents getFamilyTreeAncestorComponents(Integer childOfFamilyId, Integer maxDepth) {
+        return callProcedure(childOfFamilyId, maxDepth, "{CALL get_family_tree_reverse(?, ?)}");
+    }
+
+    public FamilyTreeComponents callProcedure(Integer memberId, Integer maxDepth, String procedure) {
         List<Member> members = new ArrayList<>();
         List<Relationship> relationships = new ArrayList<>();
 
         em.unwrap(org.hibernate.Session.class).doWork(connection -> {
-            try (CallableStatement stmt = connection.prepareCall("{CALL get_family_tree(?)}")) {
+            try (CallableStatement stmt = connection.prepareCall(procedure)) {
 
-                stmt.setInt(1, headOfFamilyId);
+                stmt.setInt(1, memberId);
+                if (maxDepth != null) {
+                    stmt.setInt(2, maxDepth);
+                } else {
+                    stmt.setNull(2, Types.INTEGER);
+                }
 
                 boolean hasResults = stmt.execute();
 
@@ -72,7 +86,7 @@ public class FamilyTreeRepositoryPortImpl implements FamilyTreeRepositoryPort {
         });
 
         if (members.isEmpty()) {
-            throw new EntityNotFoundException("Member with id " + headOfFamilyId + " not found");
+            throw new EntityNotFoundException("Member with id " + memberId + " not found");
         }
 
         return new FamilyTreeComponents(members, relationships);

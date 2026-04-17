@@ -1,6 +1,7 @@
 package org.lunskra.adapter.api.mapper;
 
 import org.lunskra.core.domain.Member;
+import org.lunskra.family_tree.api.model.MemberBulkRequestDto;
 import org.lunskra.family_tree.api.model.MemberDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -31,4 +32,7 @@ public interface MemberDtoMapper {
     MemberDto toDto(Member member);
 
     List<MemberDto> toDto(List<Member> members);
+
+    /** Converts bulk-upload input to a {@code MemberDto} suitable for {@code MemberService.createMember}. */
+    MemberDto toMemberDto(MemberBulkRequestDto requestDto);
 }

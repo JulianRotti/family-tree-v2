@@ -39,7 +39,7 @@ class FamilyTreeRepositoryPortImplTest {
         // When & Then
         Assertions.assertThrows(
                 EntityNotFoundException.class,
-                () -> port.getFamilyTreeComponents(nonExistingId)
+                () -> port.getFamilyTreeComponents(nonExistingId, null)
         );
     }
 
@@ -51,7 +51,7 @@ class FamilyTreeRepositoryPortImplTest {
         int memberId = 13;
 
         // when
-        FamilyTreeComponents result = port.getFamilyTreeComponents(memberId);
+        FamilyTreeComponents result = port.getFamilyTreeComponents(memberId, null);
 
         // then
         assertNotNull(result);
@@ -67,7 +67,7 @@ class FamilyTreeRepositoryPortImplTest {
         int memberId = 6;
 
         // when
-        FamilyTreeComponents result = port.getFamilyTreeComponents(memberId);
+        FamilyTreeComponents result = port.getFamilyTreeComponents(memberId, null);
 
         // then
         assertNotNull(result);
@@ -110,7 +110,7 @@ class FamilyTreeRepositoryPortImplTest {
         int memberId = 1;
 
         // when
-        FamilyTreeComponents result = port.getFamilyTreeComponents(memberId);
+        FamilyTreeComponents result = port.getFamilyTreeComponents(memberId, null);
 
         // then
         assertNotNull(result);
@@ -152,10 +152,45 @@ class FamilyTreeRepositoryPortImplTest {
                 .map(Member::getId)
                 .collect(Collectors.toSet());
 
-
-
         assertEquals(expectedMemberIds, actualMemberIds,
                 "Members should match exactly");
+    }
+
+    @DisplayName("getFamilyTreeComponents: maxDepth=1 for Hans Horn excludes Kenji's family")
+    @Test
+    void getFamilyTreeComponents_whenHansHornWithMaxDepthOne_thenReturnOnlyFirstGenerationDescendants() {
+        // given
+        int memberId = 1;
+
+        // when
+        FamilyTreeComponents result = port.getFamilyTreeComponents(memberId, 1);
+
+        // then
+        assertNotNull(result);
+
+        // With maxDepth=1 only Ahmed (4) and his partner Greta (3) is fetched as a recursive descendant as the
+        // child of Hans (1) and Anima (8).
+        Set<Integer> expectedMemberIds = Set.of(1, 3, 4, 8);
+
+        Set<Integer> actualMemberIds = result.members().stream()
+                .map(Member::getId)
+                .collect(Collectors.toSet());
+
+        assertEquals(expectedMemberIds, actualMemberIds,
+                "With maxDepth=1 only Hans's first-generation family should be returned");
+
+        // ---- EXPECTED RELATIONSHIPS ----
+        Set<Relationship> expectedRelationships = Set.of(
+                new Relationship(1, 8, RelationshipType.CURRENT_MARRIED_SPOUSE),
+                new Relationship(1, 4, RelationshipType.PARENT),
+                new Relationship(8, 4, RelationshipType.PARENT),
+                new Relationship(3, 4, RelationshipType.CURRENT_SPOUSE)
+        );
+
+        Set<RelationshipKey> actualRelKeys = getRelationshipkeys(new HashSet<>(result.relationships()));
+        Set<RelationshipKey> expectedRelKeys = getRelationshipkeys(expectedRelationships);
+
+        assertEquals(expectedRelKeys, actualRelKeys, "Relationships should match exactly for maxDepth=1");
     }
 
     public record RelationshipKey(int a, int b, RelationshipType type) {};
@@ -166,5 +201,155 @@ class FamilyTreeRepositoryPortImplTest {
                 Math.max(r.getFirstMemberId(), r.getSecondMemberId()),
                 r.getRelationshipType()
         )).collect(Collectors.toSet());
+    }
+
+    /**
+     * The tree for the ancestor tree looks like this:
+     *
+     *         20          21,22
+     *          \           /
+     *     16,17(ex)    18,19(current)
+     *           \       /
+     *           14,15(married)
+     *                |
+     *                1
+     */
+    @Test
+    @DisplayName("getFamilyTreeAncestorComponents: returns all ancestors and relationships for Hans Horn (maxDepth=null)")
+    void getFamilyTreeAncestorComponents_whenHansHornMaxDepthNull_thenReturnAllAncestors() {
+        // Given
+        Integer childId = 1;
+
+        Set<Relationship> expectedRelationships = Set.of(
+                new Relationship(14, 1,  RelationshipType.PARENT),
+                new Relationship(15, 1,  RelationshipType.PARENT),
+                new Relationship(14, 15, RelationshipType.CURRENT_MARRIED_SPOUSE),
+                new Relationship(16, 14, RelationshipType.PARENT),
+                new Relationship(17, 14, RelationshipType.PARENT),
+                new Relationship(16, 17, RelationshipType.EX_SPOUSE),
+                new Relationship(18, 15, RelationshipType.PARENT),
+                new Relationship(19, 15, RelationshipType.PARENT),
+                new Relationship(18, 19, RelationshipType.CURRENT_SPOUSE),
+                new Relationship(20, 16, RelationshipType.PARENT),
+                new Relationship(21, 18, RelationshipType.PARENT),
+                new Relationship(22, 18, RelationshipType.PARENT),
+                new Relationship(21, 22, RelationshipType.CURRENT_MARRIED_SPOUSE)
+        );
+
+        Set<Integer> expectedMemberIds = Set.of(1, 14, 15, 16, 17, 18, 19, 20, 21, 22);
+
+        // When
+        FamilyTreeComponents result = port.getFamilyTreeAncestorComponents(childId, null);
+
+        // Then
+        Set<RelationshipKey> actualRelKeys = getRelationshipkeys(new HashSet<>(result.relationships()));
+        Set<RelationshipKey> expectedRelKeys = getRelationshipkeys(expectedRelationships);
+
+        assertEquals(expectedRelKeys, actualRelKeys, "Relationships should match exactly");
+
+        Set<Integer> actualMemberIds = result.members().stream()
+                .map(Member::getId)
+                .collect(Collectors.toSet());
+
+        assertEquals(expectedMemberIds, actualMemberIds,
+                "Members should match exactly");
+    }
+
+    @Test
+    @DisplayName("getFamilyTreeAncestorComponents: returns only direct parents for Hans Horn (maxDepth=1)")
+    void getFamilyTreeAncestorComponents_whenHansHornMaxDepth1_thenReturnOnlyParents() {
+        // Given
+        Integer childId = 1;
+
+        Set<Relationship> expectedRelationships = Set.of(
+                new Relationship(14, 1,  RelationshipType.PARENT),
+                new Relationship(15, 1,  RelationshipType.PARENT),
+                new Relationship(14, 15, RelationshipType.CURRENT_MARRIED_SPOUSE)
+        );
+
+        Set<Integer> expectedMemberIds = Set.of(1, 14, 15);
+
+        // When
+        FamilyTreeComponents result = port.getFamilyTreeAncestorComponents(childId, 1);
+
+        // Then
+        Set<RelationshipKey> actualRelKeys = getRelationshipkeys(new HashSet<>(result.relationships()));
+        Set<RelationshipKey> expectedRelKeys = getRelationshipkeys(expectedRelationships);
+
+        assertEquals(expectedRelKeys, actualRelKeys, "Relationships should match exactly");
+
+        Set<Integer> actualMemberIds = result.members().stream()
+                .map(Member::getId)
+                .collect(Collectors.toSet());
+
+        assertEquals(expectedMemberIds, actualMemberIds,
+                "Members should match exactly");
+    }
+
+    @Test
+    @DisplayName("getFamilyTreeAncestorComponents: returns parents and grandparents for Hans Horn (maxDepth=2)")
+    void getFamilyTreeAncestorComponents_whenHansHornMaxDepth2_thenReturnParentsAndGrandparents() {
+        // Given
+        Integer childId = 1;
+
+        Set<Relationship> expectedRelationships = Set.of(
+                new Relationship(14, 1,  RelationshipType.PARENT),
+                new Relationship(15, 1,  RelationshipType.PARENT),
+                new Relationship(14, 15, RelationshipType.CURRENT_MARRIED_SPOUSE),
+                new Relationship(16, 14, RelationshipType.PARENT),
+                new Relationship(17, 14, RelationshipType.PARENT),
+                new Relationship(16, 17, RelationshipType.EX_SPOUSE),
+                new Relationship(18, 15, RelationshipType.PARENT),
+                new Relationship(19, 15, RelationshipType.PARENT),
+                new Relationship(18, 19, RelationshipType.CURRENT_SPOUSE)
+        );
+
+        Set<Integer> expectedMemberIds = Set.of(1, 14, 15, 16, 17, 18, 19);
+
+        // When
+        FamilyTreeComponents result = port.getFamilyTreeAncestorComponents(childId, 2);
+
+        // Then
+        Set<RelationshipKey> actualRelKeys = getRelationshipkeys(new HashSet<>(result.relationships()));
+        Set<RelationshipKey> expectedRelKeys = getRelationshipkeys(expectedRelationships);
+
+        assertEquals(expectedRelKeys, actualRelKeys, "Relationships should match exactly");
+
+        Set<Integer> actualMemberIds = result.members().stream()
+                .map(Member::getId)
+                .collect(Collectors.toSet());
+
+        assertEquals(expectedMemberIds, actualMemberIds,
+                "Members should match exactly");
+    }
+
+    @Test
+    @DisplayName("getFamilyTreeAncestorComponents: returns only member and single known parent for Ernst Horn (maxDepth=null)")
+    void getFamilyTreeAncestorComponents_whenErnstHornMaxDepthNull_thenReturnOnlyKnownAncestor() {
+        // Given
+        Integer childId = 16;
+
+        Set<Relationship> expectedRelationships = Set.of(
+                new Relationship(20, 16, RelationshipType.PARENT)
+        );
+
+        Set<Integer> expectedMemberIds = Set.of(16, 20);
+
+        // When
+        FamilyTreeComponents result = port.getFamilyTreeAncestorComponents(childId, null);
+
+        // Then
+        Set<RelationshipKey> actualRelKeys = getRelationshipkeys(new HashSet<>(result.relationships()));
+        Set<RelationshipKey> expectedRelKeys = getRelationshipkeys(expectedRelationships);
+
+        assertEquals(expectedRelKeys, actualRelKeys, "Relationships should match exactly");
+
+        Set<Integer> actualMemberIds = result.members().stream()
+                .map(Member::getId)
+                .collect(Collectors.toSet());
+
+        assertEquals(expectedMemberIds, actualMemberIds,
+                "Members should match exactly");
+
     }
 }

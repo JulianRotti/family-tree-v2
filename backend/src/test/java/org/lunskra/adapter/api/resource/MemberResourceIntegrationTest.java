@@ -53,8 +53,8 @@ public class MemberResourceIntegrationTest {
         .then()
             .statusCode(200)
             .body("content.size()", is(5))
-            .body("totalElements", is(13))
-            .body("totalPages", is(3))
+            .body("totalElements", is(24))
+            .body("totalPages", is(5))
             .body("page", is(0))
             .body("pageSize", is(5));
     }

@@ -29,18 +29,18 @@ class MemberRepositoryPortImplTest {
     MemberRepositoryPortImpl memberRepositoryPort;
 
     @Order(1)
-    @DisplayName("Should return all 13 members, when no filter is given")
+    @DisplayName("Should return all 24 members, when no filter is given")
     @Test
     void listMembers() {
         // Given
-        Integer expectedTotalFamilyMembers = 13;
+        Integer expectedTotalFamilyMembers = 24;
 
         // When
         MemberPage page = memberRepositoryPort.listMembers(null, null, null, 0, 100);
 
         // Then
         Assertions.assertEquals(expectedTotalFamilyMembers, page.members().size());
-        Assertions.assertEquals(13L, page.totalElements());
+        Assertions.assertEquals(24L, page.totalElements());
     }
 
     @Order(2)
@@ -48,7 +48,7 @@ class MemberRepositoryPortImplTest {
     @Test
     void testListMembers_WhenFilterForFamilyNameHorn_ReturnAllHornMembers() {
         // Given
-        Integer expectedHornFamilyMembers = 8;
+        Integer expectedHornFamilyMembers = 13;
         String lastName = "Horn";
 
         // When
@@ -179,22 +179,22 @@ class MemberRepositoryPortImplTest {
     @DisplayName("Should return first page of 5 members with correct metadata, when pageSize=5 is given")
     @Test
     void testListMembers_WhenPaginationGiven_ThenReturnPageWithMetadata() {
-        // Given: 13 total members, pageSize=5 → 3 pages; page 0 has 5 members
+        // Given: 24 total members, pageSize=5 → 3 pages; page 0 has 5 members
         MemberPage page = memberRepositoryPort.listMembers(null, null, null, 0, 5);
 
         Assertions.assertEquals(5, page.members().size());
-        Assertions.assertEquals(13L, page.totalElements());
+        Assertions.assertEquals(24L, page.totalElements());
     }
 
     @Order(9)
     @DisplayName("Should return last page of 3 members, when page=2 and pageSize=5 is given")
     @Test
     void testListMembers_WhenLastPageRequested_ThenReturnRemainingMembers() {
-        // Given: 13 total members, pageSize=5 → page 2 (0-based) has 3 members
-        MemberPage page = memberRepositoryPort.listMembers(null, null, null, 2, 5);
+        // Given: 24 total members, pageSize=5 → page 4 (0-based) has 4 members
+        MemberPage page = memberRepositoryPort.listMembers(null, null, null, 4, 5);
 
-        Assertions.assertEquals(3, page.members().size());
-        Assertions.assertEquals(13L, page.totalElements());
+        Assertions.assertEquals(4, page.members().size());
+        Assertions.assertEquals(24L, page.totalElements());
     }
 
     @Order(10)

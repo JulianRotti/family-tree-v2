@@ -13,6 +13,8 @@ public interface GenerateFamilyTreeUseCase {
      * frontend can use the pre-computed values for layout without traversing the tree again.
      *
      * @param headOfFamilyId             ID of the member at the root of the tree
+     * @param maxDepth                   maximum number of descendant generations to include,
+     *                                   or {@code null} for all generations
      * @param widthOfMemberNode          width of a single member node in the UI layout unit
      * @param spaceBetweenMemberAndSpouse horizontal gap between a member and their spouse
      * @param spaceBetweenChildren        horizontal gap between sibling nodes
@@ -21,6 +23,7 @@ public interface GenerateFamilyTreeUseCase {
      */
     FamilyTree generateFamilyTree(
             Integer headOfFamilyId,
+            Integer maxDepth,
             Float widthOfMemberNode,
             Float spaceBetweenMemberAndSpouse,
             Float spaceBetweenChildren

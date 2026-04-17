@@ -8,7 +8,7 @@ FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
-(id,first_name,last_name,@initial_last_name,@gender,@birth_date,@death_date,@birth_city,@birth_country,@email,@telephone,@street_number,@plz,@city,@occupation,@notes)
+(id,first_name,last_name,@initial_last_name,@gender,@birth_date,@death_date,@birth_city,@birth_country,@birth_lat,@birth_lng,@email,@telephone,@street_number,@plz,@city,@occupation,@notes)
 SET
     initial_last_name = NULLIF(@initial_last_name, ''),
     gender = NULLIF(@gender, ''),
@@ -16,6 +16,8 @@ SET
     death_date = NULLIF(@death_date, ''),
     birth_city = NULLIF(@birth_city, ''),
     birth_country = NULLIF(@birth_country, ''),
+    birth_lat = NULLIF(@birth_lat, ''),
+    birth_lng = NULLIF(@birth_lng, ''),
     email = NULLIF(@email, ''),
     telephone = NULLIF(@telephone, ''),
     street_number = NULLIF(@street_number, ''),

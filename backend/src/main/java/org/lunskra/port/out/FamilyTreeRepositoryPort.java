@@ -13,9 +13,25 @@ public interface FamilyTreeRepositoryPort {
      * the recursive traversal in the database.
      *
      * @param headOfFamilyId ID of the root member
+     * @param maxDepth       maximum number of descendant generations to include,
+     *                       or {@code null} for all generations
      * @return a {@link FamilyTreeComponents} containing all reachable members (with id,
      *         first name and last name populated) and all connecting relationships
      * @throws jakarta.persistence.EntityNotFoundException if no member with the given id exists
      */
-    FamilyTreeComponents getFamilyTreeComponents(Integer headOfFamilyId);
+    FamilyTreeComponents getFamilyTreeComponents(Integer headOfFamilyId, Integer maxDepth);
+
+    /**
+     * Returns all members and relationships reachable from the given head-of-family
+     * member. Delegates to the {@code get_family_tree_reverse} stored procedure which performs
+     * the recursive traversal in the database.
+     *
+     * @param childOfFamilyId ID of the root member
+     * @param maxDepth       maximum number of ascendant generations to include,
+     *                       or {@code null} for all generations
+     * @return a {@link FamilyTreeComponents} containing all reachable members (with id,
+     *         first name and last name populated) and all connecting relationships
+     * @throws jakarta.persistence.EntityNotFoundException if no member with the given id exists
+     */
+    FamilyTreeComponents getFamilyTreeAncestorComponents(Integer childOfFamilyId, Integer maxDepth);
 }

@@ -4,6 +4,7 @@ import org.lunskra.core.domain.Member;
 import org.lunskra.core.domain.MemberPage;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface MemberRepositoryPort {
 
@@ -52,4 +53,23 @@ public interface MemberRepositoryPort {
      * @throws jakarta.persistence.EntityNotFoundException if the member does not exist
      */
     Member updateMember(Member member);
+
+    /**
+     * Returns all members whose birth coordinates ({@code birthLat}/{@code birthLng}) are {@code null}.
+     *
+     * @return list of unresolved members, possibly empty
+     */
+    List<Member> findMembersWithoutCoordinates();
+
+    /**
+     * Updates the resolved birth location of an existing member: coordinates plus the
+     * canonical city and country names as returned by the GeoNames dataset.
+     *
+     * @param id            the member's identifier; must not be {@code null}
+     * @param lat           latitude to store
+     * @param lng           longitude to store
+     * @param canonicalCity canonical city name (e.g. {@code "Munich"})
+     * @param canonicalCountry canonical country name (e.g. {@code "Germany"})
+     */
+    void updateMemberCoordinates(Integer id, double lat, double lng, String canonicalCity, String canonicalCountry);
 }

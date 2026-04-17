@@ -6,9 +6,31 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS members;
 DROP TABLE IF EXISTS relationships;
+DROP TABLE IF EXISTS geonames_cities;
+DROP TABLE IF EXISTS geonames_countries;
 DROP PROCEDURE IF EXISTS get_family_tree;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE geonames_countries (
+    country_code CHAR(2)      NOT NULL,
+    country_name VARCHAR(100) NOT NULL,
+    PRIMARY KEY (country_code)
+) ENGINE=InnoDB;
+
+CREATE TABLE geonames_cities (
+    id           INT          NOT NULL,
+    name         VARCHAR(200) NOT NULL,
+    ascii_name   VARCHAR(200) NOT NULL,
+    lat          DECIMAL(9,6) NOT NULL,
+    lng          DECIMAL(9,6) NOT NULL,
+    country_code CHAR(2)      NOT NULL,
+    population   INT          NOT NULL,
+    PRIMARY KEY (id),
+    INDEX idx_ascii_name (ascii_name),
+    INDEX idx_country    (country_code),
+    FOREIGN KEY (country_code) REFERENCES geonames_countries(country_code)
+) ENGINE=InnoDB;
 
 CREATE TABLE members (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -20,6 +42,8 @@ CREATE TABLE members (
     death_date DATE,
     birth_city VARCHAR(50),
     birth_country VARCHAR(50),
+    birth_lat DECIMAL(9,6),
+    birth_lng DECIMAL(9,6),
     email VARCHAR(50),
     telephone VARCHAR(20),
     street_number VARCHAR(100),
@@ -58,82 +82,162 @@ DELIMITER ;
 
 DELIMITER //
 
-CREATE PROCEDURE get_family_tree(IN memberId INT)
+CREATE PROCEDURE get_family_tree(IN memberId INT, IN maxDepth INT)
 BEGIN
-    DROP TABLE IF EXISTS temp_combined;
-    -- Create a temporary table to hold combined results
-    CREATE TABLE temp_combined AS
+    DROP TEMPORARY TABLE IF EXISTS temp_combined;
+    CREATE TEMPORARY TABLE temp_combined AS
 
-    -- Use a CTE to get descendants
     WITH RECURSIVE descendants AS (
-        -- Base case: Start with the given member
         SELECT
             member_1_id,
             member_2_id,
-            relationship
+            relationship,
+            1 AS depth
         FROM relationships
         WHERE member_1_id = memberId AND relationship = 'PARENT'
 
         UNION ALL
 
-        -- Recursive case: Find descendants of the previously found descendants
+        SELECT
+            r.member_1_id,
+            r.member_2_id,
+            r.relationship,
+            d.depth + 1
+        FROM relationships r
+        JOIN descendants d ON r.member_1_id = d.member_2_id
+        WHERE r.relationship = 'PARENT'
+          AND (maxDepth IS NULL OR d.depth < maxDepth)
+    ),
+    -- Track the actual depth of every member in the tree
+    -- member_1_id is at (depth - 1), member_2_id is at depth
+    member_depths AS (
+        SELECT member_2_id AS id, depth     FROM descendants
+        UNION
+        SELECT member_1_id AS id, depth - 1 FROM descendants
+    ),
+    member_min_depths AS (
+        SELECT id, MIN(depth) AS depth FROM member_depths GROUP BY id
+    ),
+    all_descendants_ids AS (
+        SELECT id FROM member_min_depths
+    ),
+    spouses AS (
+        SELECT r.member_1_id, r.member_2_id, r.relationship
+        FROM relationships r
+        WHERE
+            (r.member_1_id IN (SELECT id FROM all_descendants_ids)
+            OR r.member_2_id IN (SELECT id FROM all_descendants_ids))
+            AND r.relationship IN ('CURRENT_MARRIED_SPOUSE', 'CURRENT_SPOUSE', 'EX_SPOUSE')
+    ),
+    -- ✅ Only spouses of members who have NOT yet reached maxDepth
+    -- These are the only spouses whose children should be included
+    eligible_spouse_parents AS (
+        SELECT DISTINCT
+            CASE WHEN r.member_1_id = m.id THEN r.member_2_id ELSE r.member_1_id END AS id
+        FROM relationships r
+        JOIN member_min_depths m ON (r.member_1_id = m.id OR r.member_2_id = m.id)
+        WHERE r.relationship IN ('CURRENT_MARRIED_SPOUSE', 'CURRENT_SPOUSE', 'EX_SPOUSE')
+          AND (maxDepth IS NULL OR m.depth < maxDepth)  -- ✅ depth guard
+    ),
+    spouse_descendants AS (
+        SELECT member_1_id, member_2_id, relationship
+        FROM relationships
+        WHERE relationship = 'PARENT'
+          AND member_1_id IN (SELECT id FROM eligible_spouse_parents)
+    ),
+    -- Always include current spouse relationships of the head, even when the head has no children.
+    -- Without this, all_descendants_ids is empty when the head is childless,
+    -- so the spouses CTE never picks up the head's own spouse relationship.
+    head_current_spouses AS (
+        SELECT member_1_id, member_2_id, relationship
+        FROM relationships
+        WHERE (member_1_id = memberId OR member_2_id = memberId)
+          AND relationship IN ('CURRENT_MARRIED_SPOUSE', 'CURRENT_SPOUSE')
+    )
+    SELECT DISTINCT member_1_id, member_2_id, relationship FROM (
+        SELECT member_1_id, member_2_id, relationship FROM descendants
+        UNION
+        SELECT member_1_id, member_2_id, relationship FROM spouses
+        UNION
+        SELECT member_1_id, member_2_id, relationship FROM spouse_descendants
+        UNION
+        SELECT member_1_id, member_2_id, relationship FROM head_current_spouses
+    ) AS combined_results_temp;
+
+    SELECT * FROM temp_combined;
+
+    SELECT * FROM members m
+    WHERE EXISTS (
+        SELECT 1 FROM temp_combined tc
+        WHERE tc.member_1_id = m.id OR tc.member_2_id = m.id
+    ) OR m.id = memberId;
+
+    DROP TEMPORARY TABLE IF EXISTS temp_combined;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE PROCEDURE get_family_tree_reverse(IN memberId INT, IN maxDepth INT)
+BEGIN
+    DROP TEMPORARY TABLE IF EXISTS temp_combined;
+    CREATE TEMPORARY TABLE temp_combined AS
+
+    WITH RECURSIVE ancestors AS (
+        SELECT
+            member_1_id,
+            member_2_id,
+            relationship,
+            1 AS depth
+        FROM relationships
+        WHERE member_2_id = memberId AND relationship = 'PARENT'
+
+        UNION ALL
+
+        SELECT
+            r.member_1_id,
+            r.member_2_id,
+            r.relationship,
+            a.depth + 1
+        FROM relationships r
+        JOIN ancestors a ON r.member_2_id = a.member_1_id
+        WHERE r.relationship = 'PARENT'
+          AND (maxDepth IS NULL OR a.depth < maxDepth)
+    ),
+    all_ancestor_ids AS (
+        SELECT DISTINCT * FROM (
+            SELECT member_1_id FROM ancestors
+            UNION
+            SELECT member_2_id FROM ancestors
+        ) AS all_ancestor_ids_temp
+    ),
+    ancestor_spouses AS (
         SELECT
             r.member_1_id,
             r.member_2_id,
             r.relationship
-        FROM
-            relationships r
-        JOIN
-            descendants d ON r.member_1_id = d.member_2_id
+        FROM relationships r
         WHERE
-            r.relationship = 'PARENT'
-    ),
-    all_descendants_ids AS (
-        SELECT DISTINCT * FROM (SELECT member_1_id FROM descendants UNION SELECT member_2_id FROM descendants) AS all_descendants_ids_temp
-        ),
-    spouses AS (
-        -- Find spouses of the members in the descendants CTE
-        SELECT
-            r.member_1_id AS member_1_id,
-            r.member_2_id AS member_2_id,
-            r.relationship
-        FROM
-            relationships r
-        WHERE
-            (r.member_1_id IN (SELECT * FROM all_descendants_ids)
-            OR r.member_2_id IN (SELECT * FROM all_descendants_ids))
-            AND (r.relationship = 'CURRENT_MARRIED_SPOUSE' OR r.relationship = 'CURRENT_SPOUSE' or r.relationship = 'EX_SPOUSE')
-    ),
-    all_spouses_ids AS (
-        SELECT DISTINCT * FROM (SELECT member_1_id FROM spouses UNION SELECT member_2_id FROM spouses) AS all_spouses_ids_temp
-    ),
-        -- Now include children of the spouses recursively
-    spouse_descendants AS (
-        SELECT
-            member_1_id,
-            member_2_id,
-            relationship
-        FROM
-            relationships
-        WHERE
-            relationship = 'PARENT' AND member_1_id IN (SELECT * FROM all_spouses_ids)
+            r.member_1_id IN (SELECT * FROM all_ancestor_ids)
+            AND r.member_2_id IN (SELECT * FROM all_ancestor_ids)
+            AND r.relationship IN ('CURRENT_MARRIED_SPOUSE', 'CURRENT_SPOUSE', 'EX_SPOUSE')
     )
-    -- Insert descendants and spouses into temp_combined
-    SELECT DISTINCT * FROM (
-        SELECT * FROM descendants
+    SELECT DISTINCT member_1_id, member_2_id, relationship FROM (
+        SELECT member_1_id, member_2_id, relationship FROM ancestors
         UNION
-        SELECT * FROM spouses
-        UNION
-        SELECT * FROM spouse_descendants) AS combined_results_temp;
+        SELECT member_1_id, member_2_id, relationship FROM ancestor_spouses
+    ) AS combined;
 
-    -- First result set: Return the combined relationships
     SELECT * FROM temp_combined;
 
-    SELECT * FROM members
-    WHERE id IN (SELECT member_2_id FROM temp_combined UNION SELECT member_1_id FROM temp_combined) OR id = memberId;
+    SELECT * FROM members m
+    WHERE EXISTS (
+        SELECT 1 FROM temp_combined tc
+        WHERE tc.member_1_id = m.id OR tc.member_2_id = m.id
+    ) OR m.id = memberId;
 
-    -- Cleanup: Drop the temporary table
-    DROP TABLE IF EXISTS temp_combined;
+    DROP TEMPORARY TABLE IF EXISTS temp_combined;
 END //
 
 DELIMITER ;

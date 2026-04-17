@@ -38,6 +38,10 @@ public final class MemberDtoAssembler {
     private final String NOTES_PATTERN = "^$|^[A-Za-zÄÖÜäöüß0-9\\s.,!?;:()\\-\"'/@#&+=%]{1,500}$";
     private final String NOTES_MESSAGE = "Only letters, digits, common punctuation, and umlauts are allowed (max. 500 characters)";
 
+    private static boolean isZeroCoordinate(Double value) {
+        return value != null && value == 0.0;
+    }
+
     public MemberDto fromFormParams(
         @NotBlank @Pattern(regexp = NAME_PATTERN, message = NAME_MESSAGE) String firstName,
         @NotBlank @Pattern(regexp = NAME_PATTERN, message = NAME_MESSAGE) String lastName,
@@ -53,7 +57,9 @@ public final class MemberDtoAssembler {
         String postcode,
         @Pattern(regexp = CITY_PATTERN, message = CITY_MESSAGE) String city,
         @Pattern(regexp = OCCUPATION_PATTERN, message = OCCUPATION_MESSAGE) String occupation,
-        @Pattern(regexp = NOTES_PATTERN, message = NOTES_MESSAGE)  String notes
+        @Pattern(regexp = NOTES_PATTERN, message = NOTES_MESSAGE) String notes,
+        Double birthLat,
+        Double birthLng
     ) {
         return new MemberDto()
             .firstName(firstName)
@@ -70,6 +76,8 @@ public final class MemberDtoAssembler {
             .postcode(postcode)
             .city(city)
             .occupation(occupation)
-            .notes(notes);
+            .notes(notes)
+            .birthLat(isZeroCoordinate(birthLat) ? null : birthLat)
+            .birthLng(isZeroCoordinate(birthLng) ? null : birthLng);
     }
 }

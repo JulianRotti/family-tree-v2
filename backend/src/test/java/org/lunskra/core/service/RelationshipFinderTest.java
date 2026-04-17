@@ -34,13 +34,13 @@ class RelationshipFinderTest {
                 RelationshipGenerator.parentRelationship(spouseId, childOtherRel)
         );
 
-        RelationshipFinder.Spouse spouse = new RelationshipFinder.Spouse(spouseId, RelationshipType.CURRENT_SPOUSE);
+        RelationshipFinder.SpouseRecord spouseRecord = new RelationshipFinder.SpouseRecord(spouseId, RelationshipType.CURRENT_SPOUSE);
 
         // When
-        Map<RelationshipFinder.Spouse, List<Integer>> result =
+        Map<RelationshipFinder.SpouseRecord, List<Integer>> result =
                 RelationshipFinder.findSpousesWithChildren(memberId, relationships);
 
-        List<Integer> children = result.get(spouse);
+        List<Integer> children = result.get(spouseRecord);
 
         // Then
         Assertions.assertTrue(children.contains(child1));
@@ -65,7 +65,7 @@ class RelationshipFinderTest {
         );
 
         // When
-        Map<RelationshipFinder.Spouse, List<Integer>> result =
+        Map<RelationshipFinder.SpouseRecord, List<Integer>> result =
                 RelationshipFinder.findSpousesWithChildren(member, relationships);
 
         // Then
@@ -93,20 +93,20 @@ class RelationshipFinderTest {
                 RelationshipGenerator.parentRelationship(exSpouse, childOfEx)
         );
 
-        RelationshipFinder.Spouse spouseCurrent = new RelationshipFinder.Spouse(currentSpouse, RelationshipType.CURRENT_SPOUSE);
-        RelationshipFinder.Spouse spouseEx = new RelationshipFinder.Spouse(exSpouse, RelationshipType.EX_SPOUSE);
+        RelationshipFinder.SpouseRecord spouseRecordCurrent = new RelationshipFinder.SpouseRecord(currentSpouse, RelationshipType.CURRENT_SPOUSE);
+        RelationshipFinder.SpouseRecord spouseRecordEx = new RelationshipFinder.SpouseRecord(exSpouse, RelationshipType.EX_SPOUSE);
 
         // When
-        Map<RelationshipFinder.Spouse, List<Integer>> result =
+        Map<RelationshipFinder.SpouseRecord, List<Integer>> result =
                 RelationshipFinder.findSpousesWithChildren(member, relationships);
 
         // Then
-        Assertions.assertNotNull(result.get(spouseCurrent));
-        Assertions.assertTrue(result.get(spouseCurrent).contains(childOfCurrent1));
-        Assertions.assertTrue(result.get(spouseCurrent).contains(childOfCurrent2));
+        Assertions.assertNotNull(result.get(spouseRecordCurrent));
+        Assertions.assertTrue(result.get(spouseRecordCurrent).contains(childOfCurrent1));
+        Assertions.assertTrue(result.get(spouseRecordCurrent).contains(childOfCurrent2));
 
-        Assertions.assertNotNull(result.get(spouseEx));
-        Assertions.assertTrue(result.get(spouseEx).contains(childOfEx));
+        Assertions.assertNotNull(result.get(spouseRecordEx));
+        Assertions.assertTrue(result.get(spouseRecordEx).contains(childOfEx));
     }
 
     @Test
@@ -119,14 +119,14 @@ class RelationshipFinderTest {
                 RelationshipGenerator.exSpouseRelationship(member, exSpouse)
         );
 
-        RelationshipFinder.Spouse spouse = new RelationshipFinder.Spouse(exSpouse, RelationshipType.EX_SPOUSE);
+        RelationshipFinder.SpouseRecord spouseRecord = new RelationshipFinder.SpouseRecord(exSpouse, RelationshipType.EX_SPOUSE);
 
         // When
-        Map<RelationshipFinder.Spouse, List<Integer>> result =
+        Map<RelationshipFinder.SpouseRecord, List<Integer>> result =
                 RelationshipFinder.findSpousesWithChildren(member, relationships);
 
         // Then
-        Assertions.assertFalse(result.containsKey(spouse));
+        Assertions.assertFalse(result.containsKey(spouseRecord));
     }
 
     @Test
@@ -148,16 +148,16 @@ class RelationshipFinderTest {
         );
 
         // When
-        Map<RelationshipFinder.Spouse, List<Integer>> result =
+        Map<RelationshipFinder.SpouseRecord, List<Integer>> result =
                 RelationshipFinder.findSpousesWithChildren(member, relationships);
 
-        RelationshipFinder.Spouse spouseCurrent = new RelationshipFinder.Spouse(currentSpouse, RelationshipType.CURRENT_SPOUSE);
-        RelationshipFinder.Spouse spouseEx = new RelationshipFinder.Spouse(exSpouse, RelationshipType.EX_SPOUSE);
+        RelationshipFinder.SpouseRecord spouseRecordCurrent = new RelationshipFinder.SpouseRecord(currentSpouse, RelationshipType.CURRENT_SPOUSE);
+        RelationshipFinder.SpouseRecord spouseRecordEx = new RelationshipFinder.SpouseRecord(exSpouse, RelationshipType.EX_SPOUSE);
 
         // Then
-        Assertions.assertTrue(result.containsKey(spouseCurrent));
-        Assertions.assertTrue(result.get(spouseCurrent).isEmpty());
-        Assertions.assertTrue(result.containsKey(spouseEx));
+        Assertions.assertTrue(result.containsKey(spouseRecordCurrent));
+        Assertions.assertTrue(result.get(spouseRecordCurrent).isEmpty());
+        Assertions.assertTrue(result.containsKey(spouseRecordEx));
     }
 
     @Test
@@ -173,7 +173,7 @@ class RelationshipFinderTest {
             );
 
         // When
-        Map<RelationshipFinder.Spouse, List<Integer>> result =
+        Map<RelationshipFinder.SpouseRecord, List<Integer>> result =
                 RelationshipFinder.findSpousesWithChildren(member, relationships);
 
         // Then
@@ -309,5 +309,88 @@ class RelationshipFinderTest {
 
         // Then
         Assertions.assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void findParents_noParents_parentsAndRelNull() {
+        // Given
+        int childId = 1;
+        int spouse = 2;
+        int childOfChild = 3;
+
+        List<Relationship> relationships = List.of(
+                RelationshipGenerator.currentSpouseRelationship(childId, spouse),
+                RelationshipGenerator.parentRelationship(childId, childOfChild),
+                RelationshipGenerator.parentRelationship(spouse, childOfChild)
+        );
+
+        RelationshipFinder.ParentRecord parentRecord = new RelationshipFinder.ParentRecord(
+                Set.of(),
+                null
+        );
+
+        // When
+        RelationshipFinder.ParentRecord result =
+                RelationshipFinder.findParents(childId, relationships);
+
+        // Then
+        Assertions.assertEquals(parentRecord, result);
+    }
+
+    @Test
+    void findParents_twoParents_parentsAndRelReturn() {
+        // Given
+        int childId = 1;
+        int parent1Id = 2;
+        int parent2Id = 3;
+        int otherCild = 4;
+
+        List<Relationship> relationships = List.of(
+                RelationshipGenerator.currentSpouseRelationship(parent1Id, parent2Id),
+                RelationshipGenerator.parentRelationship(parent1Id, childId),
+                RelationshipGenerator.parentRelationship(parent2Id, childId),
+                RelationshipGenerator.parentRelationship(parent1Id, otherCild),
+                RelationshipGenerator.parentRelationship(parent2Id, otherCild)
+        );
+
+        RelationshipFinder.ParentRecord parentRecord = new RelationshipFinder.ParentRecord(
+                Set.of(parent1Id, parent2Id),
+                RelationshipType.CURRENT_SPOUSE
+        );
+
+        // When
+        RelationshipFinder.ParentRecord result =
+                RelationshipFinder.findParents(childId, relationships);
+
+        // Then
+        Assertions.assertTrue(result.parentIds().contains(parent1Id));
+        Assertions.assertTrue(result.parentIds().contains(parent2Id));
+        Assertions.assertEquals(parentRecord.type(), result.type());
+        Assertions.assertEquals(parentRecord, result);
+    }
+
+    @Test
+    void findParents_oneParent_parentsReturn() {
+        // Given
+        int childId = 1;
+        int parent1Id = 2;
+        int otherCild = 4;
+
+        List<Relationship> relationships = List.of(
+                RelationshipGenerator.parentRelationship(parent1Id, childId),
+                RelationshipGenerator.parentRelationship(parent1Id, otherCild)
+        );
+
+        RelationshipFinder.ParentRecord parentRecord = new RelationshipFinder.ParentRecord(
+                Set.of(parent1Id),
+                null
+        );
+
+        // When
+        RelationshipFinder.ParentRecord result =
+                RelationshipFinder.findParents(childId, relationships);
+
+        // Then
+        Assertions.assertEquals(parentRecord, result);
     }
 }

@@ -13,6 +13,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.lunskra.core.domain.Gender;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -58,6 +59,12 @@ public class MemberEntity {
 
     @Column(name = "birth_country", length = 50)
     public String birthCountry;
+
+    @Column(name = "birth_lat", precision = 9, scale = 6)
+    public BigDecimal birthLat;
+
+    @Column(name = "birth_lng", precision = 9, scale = 6)
+    public BigDecimal birthLng;
 
     @Column(name = "email", length = 50)
     public String email;

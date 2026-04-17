@@ -37,3 +37,7 @@ infra/keycloak/export-tmp/
 # ── OS ───────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+
+# ── Generated files ──────────────────────────────────────────
+infra/mysql/cities_slim.tsv
+infra/mysql/countries_slim.tsv

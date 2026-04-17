@@ -10,37 +10,25 @@ import io.minio.http.Method;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.lunskra.port.out.ImageStoragePort;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-/**
- * {@link ImageStoragePort} implementation that stores member images in a MinIO
- * S3-compatible object store.
- * <p>
- * On startup ({@link jakarta.annotation.PostConstruct}) a {@link MinioClient} is
- * constructed from the configured endpoint and credentials, and the target bucket is
- * created if it does not yet exist. Each image is stored under a randomly generated
- * UUID key so that filenames from the client do not leak into storage paths.
- * <p>
- * Configuration properties (via MicroProfile Config):
- * <ul>
- *   <li>{@code minio.endpoint} – MinIO server URL</li>
- *   <li>{@code minio.access-key} – access key / username</li>
- *   <li>{@code minio.secret-key} – secret key / password</li>
- *   <li>{@code minio.bucket} – bucket name to use for all images</li>
- * </ul>
- */
 @Slf4j
 @ApplicationScoped
 public class MinioStorageAdapter implements ImageStoragePort {
 
     @ConfigProperty(name = "minio.endpoint")
     String endpoint;
+
+    @ConfigProperty(name = "minio.public-endpoint")
+    String publicEndpoint;
 
     @ConfigProperty(name = "minio.access-key")
     String accessKey;
@@ -52,6 +40,7 @@ public class MinioStorageAdapter implements ImageStoragePort {
     String bucket;
 
     private MinioClient minioClient;
+    private MinioClient minioPublicClient;
 
     @PostConstruct
     void init() {
@@ -59,14 +48,23 @@ public class MinioStorageAdapter implements ImageStoragePort {
                 .endpoint(endpoint)
                 .credentials(accessKey, secretKey)
                 .build();
+
+        // The public client signs URLs with the public endpoint (e.g. localhost:9000)
+        // so browsers can reach them, but routes its own network calls (region lookup)
+        // through the internal endpoint via a custom DNS resolver.
+        String internalHost = URI.create(endpoint).getHost();
+        OkHttpClient routingHttpClient = new OkHttpClient.Builder()
+                .dns(hostname -> okhttp3.Dns.SYSTEM.lookup(internalHost))
+                .build();
+        minioPublicClient = MinioClient.builder()
+                .endpoint(publicEndpoint)
+                .credentials(accessKey, secretKey)
+                .httpClient(routingHttpClient)
+                .build();
+
         ensureBucketExists();
     }
 
-    /**
-     * Creates the configured bucket if it does not already exist.
-     *
-     * @throws IllegalStateException if the MinIO API call fails
-     */
     private void ensureBucketExists() {
         try {
             boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
@@ -107,7 +105,7 @@ public class MinioStorageAdapter implements ImageStoragePort {
     @Override
     public String generatePresignedUrl(String objectKey) {
         try {
-            String url = minioClient.getPresignedObjectUrl(
+            String url = minioPublicClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.GET)
                             .bucket(bucket)

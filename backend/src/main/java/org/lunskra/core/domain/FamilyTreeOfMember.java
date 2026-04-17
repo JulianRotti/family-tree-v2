@@ -25,6 +25,10 @@ public class FamilyTreeOfMember {
     /** ID of the member this node represents. */
     private Integer memberId;
     /**
+     * The generation of that member respective to the trees head member.
+     */
+    private Integer generation;
+    /**
      * Total horizontal width of this member's subtree, derived from node widths and
      * configured spacing values. Used by the frontend for layout calculations.
      */

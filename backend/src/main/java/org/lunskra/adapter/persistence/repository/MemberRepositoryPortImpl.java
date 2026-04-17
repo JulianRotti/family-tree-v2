@@ -13,6 +13,7 @@ import org.lunskra.core.domain.Member;
 import org.lunskra.core.domain.MemberPage;
 import org.lunskra.port.out.MemberRepositoryPort;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -82,6 +83,43 @@ public class MemberRepositoryPortImpl implements MemberRepositoryPort {
         log.atInfo().addArgument(member.getFirstName()).addArgument(member.getLastName())
                 .setMessage("Persisting new member {} {} to DB").log();
         MemberEntity entity = mapper.toEntity(member);
+        if (entity.id != null) {
+            // Explicit ID requested: use a native INSERT so MySQL accepts the provided value.
+            // MySQL's AUTO_INCREMENT counter automatically advances past the inserted id.
+            memberPanacheRepository.getEntityManager().createNativeQuery("""
+                    INSERT INTO members
+                        (id, first_name, last_name, initial_last_name, gender,
+                         birth_date, death_date, birth_city, birth_country,
+                         birth_lat, birth_lng, email, telephone, street_number,
+                         plz, city, image_path, occupation, notes)
+                    VALUES
+                        (:id, :firstName, :lastName, :initialLastName, :gender,
+                         :birthDate, :deathDate, :birthCity, :birthCountry,
+                         :birthLat, :birthLng, :email, :telephone, :streetAndNumber,
+                         :postcode, :city, :imagePath, :occupation, :notes)
+                    """)
+                    .setParameter("id", entity.id)
+                    .setParameter("firstName", entity.firstName)
+                    .setParameter("lastName", entity.lastName)
+                    .setParameter("initialLastName", entity.initialLastName)
+                    .setParameter("gender", entity.gender != null ? entity.gender.name() : null)
+                    .setParameter("birthDate", entity.birthDate)
+                    .setParameter("deathDate", entity.deathDate)
+                    .setParameter("birthCity", entity.birthCity)
+                    .setParameter("birthCountry", entity.birthCountry)
+                    .setParameter("birthLat", entity.birthLat)
+                    .setParameter("birthLng", entity.birthLng)
+                    .setParameter("email", entity.email)
+                    .setParameter("telephone", entity.telephone)
+                    .setParameter("streetAndNumber", entity.streetAndNumber)
+                    .setParameter("postcode", entity.postcode)
+                    .setParameter("city", entity.city)
+                    .setParameter("imagePath", entity.imagePath)
+                    .setParameter("occupation", entity.occupation)
+                    .setParameter("notes", entity.notes)
+                    .executeUpdate();
+            return mapper.toDomain(entity);
+        }
         memberPanacheRepository.persist(entity);
         return mapper.toDomain(entity);
     }
@@ -100,6 +138,29 @@ public class MemberRepositoryPortImpl implements MemberRepositoryPort {
         mapper.updateEntity(member, entityStored);
 
         return mapper.toDomain(entityStored);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<Member> findMembersWithoutCoordinates() {
+        log.atDebug().setMessage("Querying members without birth coordinates from DB").log();
+        return memberPanacheRepository.find("birthLat is null")
+                .list()
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    @Transactional
+    public void updateMemberCoordinates(Integer id, double lat, double lng, String canonicalCity, String canonicalCountry) {
+        log.atDebug().addArgument(id).addArgument(lat).addArgument(lng)
+                .addArgument(canonicalCity).addArgument(canonicalCountry)
+                .setMessage("Updating location for member id={}: lat={}, lng={}, city={}, country={}").log();
+        memberPanacheRepository.update(
+                "birthLat = ?1, birthLng = ?2, birthCity = ?3, birthCountry = ?4 where id = ?5",
+                BigDecimal.valueOf(lat), BigDecimal.valueOf(lng), canonicalCity, canonicalCountry, id);
     }
 
     /**

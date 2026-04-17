@@ -31,7 +31,7 @@ class RelationshipRepositoryPortImplTest {
     @Test
     void listRelationships() {
         // Given
-        Integer totalRelationships = 19;
+        Integer totalRelationships = 34;
 
         // When
         List<Relationship> relationships = relationshipRepositoryPort.listRelationships();

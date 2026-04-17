@@ -50,7 +50,7 @@ public class RelationshipResourceIntegrationTest {
     private static final Integer SECOND_SPOUSE_CANDIDATE_ID = 2;
 
     @Order(1)
-    @DisplayName("Should return all 19 seeded relationships")
+    @DisplayName("Should return all 34 seeded relationships")
     @Test
     void testListRelationships_WhenSeededDataLoaded_ThenReturnAll19() {
         given()
@@ -59,7 +59,7 @@ public class RelationshipResourceIntegrationTest {
             .get(API_RELATIONSHIPS)
         .then()
             .statusCode(200)
-            .body("size()", is(19));
+            .body("size()", is(34));
     }
 
     @Order(2)

@@ -35,6 +35,8 @@ public class Member {
     private LocalDate deathDate;
     private String birthCity;
     private String birthCountry;
+    private Double birthLat;
+    private Double birthLng;
     private String email;
     private String telephone;
     private String streetAndNumber;

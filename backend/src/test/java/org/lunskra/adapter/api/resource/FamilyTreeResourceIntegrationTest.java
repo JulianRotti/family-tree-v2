@@ -36,7 +36,10 @@ class FamilyTreeResourceIntegrationTest {
         .then()
             .statusCode(200)
             .body("headMemberId", is(1))
-            .body("tree.subtreeLength", is(46.0f));
+            .body("tree.subtreeLength", is(46.0f))
+            .body("numberTotal", is(12))
+            .body("numberLiving", is(10))
+            .body("numberGenerations", is(4));
     }
 
     @Test
@@ -53,7 +56,31 @@ class FamilyTreeResourceIntegrationTest {
         .then()
             .statusCode(200)
             .body("headMemberId", is(6))
-            .body("tree.subtreeLength", is(30.0f));
+            .body("tree.subtreeLength", is(30.0f))
+            .body("numberTotal", is(6))
+            .body("numberLiving", is(6))
+            .body("numberGenerations", is(2));;
+    }
+
+    @Test
+    @DisplayName("Should return subtreeLength 12 for Hans (1) with maxDepth=1 (only first-generation descendants)")
+    void getFamilyTreeByHeadMemberId_WhenMemberIdIs1AndMaxDepthIs1_ThenSubtreeLengthIs24() {
+        given()
+            .accept(ContentType.JSON)
+            .pathParam("memberId", 1)
+            .queryParam("widthOfMemberNode", WIDTH_OF_MEMBER_NODE)
+            .queryParam("spaceBetweenMemberAndSpouse", SPACE_BETWEEN_MEMBER_SPOUSE)
+            .queryParam("spaceBetweenChildren", SPACE_BETWEEN_CHILDREN)
+            .queryParam("maxDepth", 1)
+        .when()
+            .get(API_FAMILY_TREE)
+        .then()
+            .statusCode(200)
+            .body("headMemberId", is(1))
+            .body("tree.subtreeLength", is(12.0F))
+            .body("numberTotal", is(4))
+            .body("numberLiving", is(2))
+            .body("numberGenerations", is(2));
     }
 
     @Test
