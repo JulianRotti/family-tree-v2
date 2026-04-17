@@ -5,7 +5,7 @@
 ```
 my-app/
 ├── backend/          # Quarkus REST API
-├── frontend/         # React app
+├── frontend/         # React app (separate Git repo, included as submodule)
 ├── infra/
 │   ├── keycloak/     # Keycloak realm export (backup/restore)
 │   └── mysql/        # Schema, init scripts, test data, and GeoNames data
@@ -15,7 +15,45 @@ my-app/
 └── README.md
 ```
 
+### Notes
+
+* The `frontend/` directory is managed as a **Git submodule**.
+* It is a standalone repository (used for deployment, e.g. on Vercel), but linked into this project.
+* After cloning this repository, make sure to initialize submodules:
+
+```bash
+git submodule update --init --recursive
+```
+
 ---
+
+## Git Workflow
+
+### Main repository
+
+```bash
+git add .
+git commit -m "Your message"
+git push
+```
+
+### Frontend (submodule)
+
+```bash
+cd frontend
+git add .
+git commit -m "Your message"
+git push
+cd ..
+```
+
+### After updating frontend
+
+```bash
+git add frontend
+git commit -m "Update frontend submodule"
+git push
+```
 
 ## Prerequisites
 
