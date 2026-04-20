@@ -2,6 +2,8 @@ package org.lunskra.adapter.persistence.repository;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.SecurityAttribute;
+import io.quarkus.test.security.TestSecurity;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
@@ -10,6 +12,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.lunskra.adapter.TestTenantConstants;
 import org.lunskra.adapter.persistence.testcontainer.MySQLTestContainerResource;
 import org.lunskra.core.domain.Relationship;
 import org.lunskra.core.domain.RelationshipType;
@@ -19,6 +22,7 @@ import java.util.List;
 @QuarkusTest
 @QuarkusTestResource(value = MySQLTestContainerResource.class, restrictToAnnotatedClass = true)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestSecurity(user = "testuser", roles = {"view", "create", "edit", "delete"}, attributes = {@SecurityAttribute(key = TestTenantConstants.TENANT_ID_KEY, value = TestTenantConstants.TENANT_A_ID)})
 class RelationshipRepositoryPortImplTest {
 
     @Inject

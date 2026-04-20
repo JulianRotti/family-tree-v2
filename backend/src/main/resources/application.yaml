@@ -20,6 +20,8 @@ quarkus:
     password: ${DB_PASSWORD}
     jdbc:
       url: ${DB_URL}
+  hibernate-orm:
+    multitenant: DISCRIMINATOR
   oidc:
     auth-server-url: ${OIDC_AUTH_SERVER_URL}
     client-id: ${OIDC_CLIENT_ID:family-tree-backend}

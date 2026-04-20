@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.TenantId;
 import org.lunskra.core.domain.Gender;
 
 import java.math.BigDecimal;
@@ -89,4 +90,8 @@ public class MemberEntity {
 
     @Column(name = "image_path", length = 255)
     public String imagePath;
+
+    @TenantId
+    @Column(name = "tenant_id", length = 36, nullable = false, updatable = false)
+    public String tenantId;
 }

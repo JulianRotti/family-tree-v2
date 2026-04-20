@@ -2,12 +2,15 @@ package org.lunskra.adapter.persistence.repository;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.SecurityAttribute;
+import io.quarkus.test.security.TestSecurity;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.lunskra.adapter.TestTenantConstants;
 import org.lunskra.adapter.persistence.testcontainer.MySQLTestContainerResource;
 import org.lunskra.core.domain.FamilyTreeComponents;
 import org.lunskra.core.domain.Member;
@@ -25,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Slf4j
 @QuarkusTest
 @QuarkusTestResource(value = MySQLTestContainerResource.class, restrictToAnnotatedClass = true)
+@TestSecurity(user = "testuser", roles = {"view"}, attributes = {@SecurityAttribute(key = TestTenantConstants.TENANT_ID_KEY, value = TestTenantConstants.TENANT_A_ID)})
 class FamilyTreeRepositoryPortImplTest {
 
     @Inject

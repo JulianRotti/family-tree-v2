@@ -1,4 +1,4 @@
-USE family_tree
+USE family_tree;
 
 SET GLOBAL local_infile = 1;
 
@@ -8,7 +8,7 @@ FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
-(id,first_name,last_name,@initial_last_name,@gender,@birth_date,@death_date,@birth_city,@birth_country,@birth_lat,@birth_lng,@email,@telephone,@street_number,@plz,@city,@occupation,@notes)
+(id,first_name,last_name,@initial_last_name,@gender,@birth_date,@death_date,@birth_city,@birth_country,@birth_lat,@birth_lng,@email,@telephone,@street_number,@plz,@city,@occupation,@notes,tenant_id)
 SET
     initial_last_name = NULLIF(@initial_last_name, ''),
     gender = NULLIF(@gender, ''),
@@ -26,10 +26,12 @@ SET
     occupation = NULLIF(@occupation, ''),
     notes = NULLIF(@notes, '');
 
+COMMIT;
+
 LOAD DATA INFILE '/docker-entrypoint-initdb.d/test_data/test_data_relationships.csv'
 INTO TABLE relationships
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
-(member_1_id, member_2_id, relationship);
+(member_1_id, member_2_id, relationship,tenant_id);

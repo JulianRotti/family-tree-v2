@@ -22,7 +22,7 @@ import java.util.List;
  * Panache and Hibernate ORM.
  * <p>
  * {@code listMembers} performs a case-insensitive LIKE query on first name and last
- * name, and an exact match on birth date. All filters are optional — passing
+ * name, and an exact match on birthdate. All filters are optional — passing
  * {@code null} or blank strings skips the corresponding predicate.
  */
 @Slf4j
@@ -83,43 +83,6 @@ public class MemberRepositoryPortImpl implements MemberRepositoryPort {
         log.atInfo().addArgument(member.getFirstName()).addArgument(member.getLastName())
                 .setMessage("Persisting new member {} {} to DB").log();
         MemberEntity entity = mapper.toEntity(member);
-        if (entity.id != null) {
-            // Explicit ID requested: use a native INSERT so MySQL accepts the provided value.
-            // MySQL's AUTO_INCREMENT counter automatically advances past the inserted id.
-            memberPanacheRepository.getEntityManager().createNativeQuery("""
-                    INSERT INTO members
-                        (id, first_name, last_name, initial_last_name, gender,
-                         birth_date, death_date, birth_city, birth_country,
-                         birth_lat, birth_lng, email, telephone, street_number,
-                         plz, city, image_path, occupation, notes)
-                    VALUES
-                        (:id, :firstName, :lastName, :initialLastName, :gender,
-                         :birthDate, :deathDate, :birthCity, :birthCountry,
-                         :birthLat, :birthLng, :email, :telephone, :streetAndNumber,
-                         :postcode, :city, :imagePath, :occupation, :notes)
-                    """)
-                    .setParameter("id", entity.id)
-                    .setParameter("firstName", entity.firstName)
-                    .setParameter("lastName", entity.lastName)
-                    .setParameter("initialLastName", entity.initialLastName)
-                    .setParameter("gender", entity.gender != null ? entity.gender.name() : null)
-                    .setParameter("birthDate", entity.birthDate)
-                    .setParameter("deathDate", entity.deathDate)
-                    .setParameter("birthCity", entity.birthCity)
-                    .setParameter("birthCountry", entity.birthCountry)
-                    .setParameter("birthLat", entity.birthLat)
-                    .setParameter("birthLng", entity.birthLng)
-                    .setParameter("email", entity.email)
-                    .setParameter("telephone", entity.telephone)
-                    .setParameter("streetAndNumber", entity.streetAndNumber)
-                    .setParameter("postcode", entity.postcode)
-                    .setParameter("city", entity.city)
-                    .setParameter("imagePath", entity.imagePath)
-                    .setParameter("occupation", entity.occupation)
-                    .setParameter("notes", entity.notes)
-                    .executeUpdate();
-            return mapper.toDomain(entity);
-        }
         memberPanacheRepository.persist(entity);
         return mapper.toDomain(entity);
     }

@@ -1,0 +1,69 @@
+❯ so i create a hetzner account (anything i need to be careful for? i want an upper cost limit) and install k3s on this account? then i push my images to a public image  
+  repo, prepare a git repo with the proper Deployment etc files, pull that into my hetzner cloud, create the secrets/environment variables (this part is still ab bit     
+  fuzzy, do i have a k3s interface or how does this work?), tell k3s to deploy according to the deployment files which then pulls the images and builds the app?          
+                                                                                                                                                                          
+● Your mental model is correct. Let me clarify each step and the fuzzy parts:                                                                                             
+                                                                                                                                                                          
+  ---
+  Hetzner Account — Watch Out For                                                                                                                                         
+                                                                                                                                                                          
+  - Spending limits: Hetzner does NOT have a built-in cost cap (unlike AWS). Set up a billing alert via email in the project settings, and use their cost estimator. A    
+  CX22 (2 vCPU, 4GB RAM) + Object Storage will be ~6–8€/month — hard to accidentally overspend.                                                                           
+  - Project structure: Create a separate Hetzner "Project" for this app — isolates billing and resources.
+  - Firewall: Enable Hetzner's cloud firewall immediately after VM creation. Only open ports 22 (SSH), 80, 443.                                                           
+                                                                                                                                                                          
+  ---                                                                                                                                                                     
+  The Correct Flow                                                                                                                                                        
+                  
+  Your machine                  Hetzner VM              Registry (e.g. Docker Hub / GHCR)
+  -----------                   ----------              ----------------------------------                                                                                
+  docker build → docker push ──────────────────────────→ image stored here                                                                                                
+                                       ↓                                                                                                                                  
+  git push manifests ──→ git repo      |                                                                                                                                  
+                            ↓          |                                                                                                                                  
+                      kubectl apply    |
+                            ↓          |                                                                                                                                  
+                      k3s reads Deployment → pulls image ←──────────┘
+                            ↓                                                                                                                                             
+                      creates Pods with env vars injected from Secrets
+                                                                                                                                                                          
+  ---             
+  The Fuzzy Part: Secrets & Env Vars
+                                                                                                                                                                          
+  You don't need a UI. Here's how it works:
+                                                                                                                                                                          
+  Step 1 — SSH into your Hetzner VM and run:                                                                                                                              
+  kubectl create secret generic app-secrets \
+    --from-literal=MYSQL_PASSWORD=supersecret \                                                                                                                           
+    --from-literal=MINIO_ACCESS_KEY=abc123 \   
+    --from-literal=KEYCLOAK_ADMIN_PASSWORD=xyz                                                                                                                            
+  This stores secrets encrypted inside k3s (never in git).
+                                                                                                                                                                          
+  Step 2 — Your Deployment manifest references them:                                                                                                                      
+  envFrom:                                                                                                                                                                
+    - secretRef:                                                                                                                                                          
+        name: app-secrets
+  k3s injects all secret keys as environment variables into the container — exactly like your current .env file, but managed by the cluster.
+                                                                                                                                                                          
+  To update a secret later: re-run kubectl create secret ... --dry-run -o yaml | kubectl apply -f -                                                                       
+                                                                                                                                                                          
+  ---                                                                                                                                                                     
+  Full Corrected Flow                                                                                                                                                     
+                     
+  1. Create Hetzner account → new Project → provision CX22 VM (Ubuntu 24.04)
+  2. SSH in, run k3s install (one curl command)                                                                                                                           
+  3. Create Hetzner Object Storage bucket → note endpoint + access key                                                                                                    
+  4. On your local machine: docker build + docker push to Docker Hub or GitHub Container Registry (GHCR is free for public images)                                        
+  5. Write k8s manifests (Deployments, Services, Ingress, PVCs) — images reference your-dockerhub/family-tree-backend:latest                                              
+  6. Push manifests to a git repo (secrets stay OUT of git)                                                                                                               
+  7. SSH into VM → git clone your manifests repo → kubectl create secret ... (one-time, done on the VM directly)                                                          
+  8. kubectl apply -f . — k3s pulls images, starts containers, injects secrets as env vars                                                                                
+  9. Add cert-manager + Let's Encrypt for HTTPS                                                                                                                           
+                                                                                                                                                                          
+  ---                                                                                                                                                                     
+  One Thing to Reconsider                                                                                                                                                 
+                         
+  Keycloak in start-dev mode (your current config) is not production-safe — it uses an embedded H2 database. For production you need to point it at your MySQL instance
+  via extra env vars (KC_DB=mysql, KC_DB_URL, etc.). Worth addressing before deploying.                                                                                   
+   
+  Want me to start writing the actual manifests?   

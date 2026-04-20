@@ -188,6 +188,7 @@ Open [http://localhost:8080](http://localhost:8080) and log in:
 1. Click the dropdown in the top-left (shows `master` by default)
 2. Click **Create Realm**
 3. Set the name to `family-tree` and click **Create**
+4. In Realm Settings set Unmanaged Attributes to "Only administrators can write"
 
 ### 4. Create the Clients
 
@@ -199,8 +200,12 @@ Used by the React frontend.
 | Setting | Value |
 |---|---|
 | Client ID | `family-tree-frontend` |
+| Valid redirect URIs | <frontend url>/* |
+| Valid post logout redirect URIs | <frontend url>/* |
+| Web origins | <frontend url> |
 | Client Protocol | `openid-connect` |
 | Client Authentication | Off (public client) |
+| Authentication flow | Standard flow, direct Access grants |
 
 #### `family-tree-swagger`
 Used for local/dev testing of API endpoints via Swagger UI.
@@ -208,8 +213,12 @@ Used for local/dev testing of API endpoints via Swagger UI.
 | Setting | Value |
 |---|---|
 | Client ID | `family-tree-swagger` |
+| Valid redirect URIs | <backend url>/q/swagger-ui/oauth2-redirect.html |
+| Valid post logout redirect URIs | <backend url>/* |
+| Web origins | <backend url>/* |
 | Client Protocol | `openid-connect` |
 | Client Authentication | Off (public client) |
+| Authentication flow | Standard flow |
 
 #### `family-tree-backend`
 Used by the Quarkus backend to validate incoming tokens.
@@ -246,6 +255,7 @@ Go to **Realm roles → Create role** and add:
 1. Go to **Users → Add user**, fill in a username, and save
 2. Under **Credentials**, set a password — disable **Temporary** to skip forced reset
 3. Under **Role mapping**, assign one or more roles
+4. Under **Attributes**, add the tenant_id (UUID) of the family the user should have access to
 
 ---
 

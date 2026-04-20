@@ -1,25 +1,27 @@
-id,first_name,last_name,initial_last_name,gender,birth_date,death_date,birth_city,birth_country,birth_lat,birth_lng,email,telephone,street_number,plz,city,occupation,notes
-1,Hans,Horn,Buchner,M,1930-01-01,2020-02-01,München,Deutschland,,,hans@horn.de,89349421412,Grimmstr. 5,80336,München,Hausmeister,note
-2,Fatima,Horn,,F,1990-03-09,,München,Deutschland,,,fatima@horn.de,14257172152,Poccistr. 1,80336,München,Bäckerin,testnote
-3,Greta,Horn,Bauer,F,1950-06-10,,München,Deutschland,,,,,,,,,
-4,Ahmed,Horn,,M,1950-06-02,,Berlin,Deutschland,,,,,,,,,,
-5,Chantal,Horn,,F,1988-03-22,,Berlin,Deutschland,,,,,Lindwurmstr. 5,80336,München,,
-6,Kenji,Horn,,M,1991-02-21,,Berlin,Deutschland,,,kenji@horn.de,,,,,,
-7,Maria,Cortez,,F,1991-05-29,,Madrid,Spanien,,,,,,,,,,
-8,Amina,Horn,,F,1930-01-01,2024-01-01,Madrid,Spanien,,,,,,,,,,
-9,Luca,Friedenthal,,M,2000-01-01,,Madrid,Spanien,,,,,,,,,,
-10,Omar,Friedenthal,,M,2000-01-01,,Hamburg,Deutschland,,,,,,,,,note
-11,Miguel,Cortez,,M,2000-01-01,,Hamburg,Deutschland,,,,,,,,Beraterin,
-12,Naomi,Friedenthal,,F,1990-01-01,,Hamburg,Deutschland,,,,,,,,,note
-13,Sofia,Horn,,F,1990-01-01,,Hamburg,Deutschland,,,,,,,,CEO,toll
-14,Friedrich,Horn,,M,1905-03-15,,Wien,Österreich,,,,,,,,,,
-15,Helene,Horn,Müller,F,1908-07-22,,Wien,Österreich,,,,,,,,,,
-16,Ernst,Horn,,M,1878-05-10,1950-11-03,Salzburg,Österreich,,,,,,,,,,
-17,Berta,Horn,Klein,F,1880-02-28,1945-06-15,Salzburg,Österreich,,,,,,,,,,
-18,Karl,Müller,,M,1880-09-01,,Graz,Österreich,,,,,,,,,,
-19,Rosa,Müller,Steiner,F,1882-04-17,,Graz,Österreich,,,,,,,,,,
-20,Wilhelm,Horn,,M,1850-01-12,1920-03-04,Linz,Österreich,,,,,,,,,,
-21,Johann,Müller,,M,1852-06-30,1930-01-01,Innsbruck,Österreich,,,,,,,,,,
-22,Anna,Müller,Huber,F,1855-11-08,1935-07-19,Innsbruck,Österreich,,,,,,,,,,
-23,Miko,Maschuk,,D,1840-11-08,1935-07-19,Kiev,Ukraine,,,,,,,,,,
-24,Goldin,Barochov,,M,1839-11-08,1935-07-19,Innsbruck,Österreich,,,,,,,,,,
+id,first_name,last_name,initial_last_name,gender,birth_date,death_date,birth_city,birth_country,birth_lat,birth_lng,email,telephone,street_number,plz,city,occupation,notes,tenant_id
+1,Hans,Horn,Buchner,M,1930-01-01,2020-02-01,München,Deutschland,,,hans@horn.de,89349421412,Grimmstr. 5,80336,München,Hausmeister,note,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+2,Fatima,Horn,,F,1990-03-09,,München,Deutschland,,,fatima@horn.de,14257172152,Poccistr. 1,80336,München,Bäckerin,testnote,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+3,Greta,Horn,Bauer,F,1950-06-10,,München,Deutschland,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+4,Ahmed,Horn,,M,1950-06-02,,Berlin,Deutschland,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+5,Chantal,Horn,,F,1988-03-22,,Berlin,Deutschland,,,,,Lindwurmstr. 5,80336,München,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+6,Kenji,Horn,,M,1991-02-21,,Berlin,Deutschland,,,kenji@horn.de,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+7,Maria,Cortez,,F,1991-05-29,,Madrid,Spanien,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+8,Amina,Horn,,F,1930-01-01,2024-01-01,Madrid,Spanien,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+9,Luca,Friedenthal,,M,2000-01-01,,Madrid,Spanien,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+10,Omar,Friedenthal,,M,2000-01-01,,Hamburg,Deutschland,,,,,,,,,note,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+11,Miguel,Cortez,,M,2000-01-01,,Hamburg,Deutschland,,,,,,,,Beraterin,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+12,Naomi,Friedenthal,,F,1990-01-01,,Hamburg,Deutschland,,,,,,,,,note,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+13,Sofia,Horn,,F,1990-01-01,,Hamburg,Deutschland,,,,,,,,CEO,toll,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+14,Friedrich,Horn,,M,1905-03-15,,Wien,Österreich,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+15,Helene,Horn,Müller,F,1908-07-22,,Wien,Österreich,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+16,Ernst,Horn,,M,1878-05-10,1950-11-03,Salzburg,Österreich,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+17,Berta,Horn,Klein,F,1880-02-28,1945-06-15,Salzburg,Österreich,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+18,Karl,Müller,,M,1880-09-01,,Graz,Österreich,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+19,Rosa,Müller,Steiner,F,1882-04-17,,Graz,Österreich,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+20,Wilhelm,Horn,,M,1850-01-12,1920-03-04,Linz,Österreich,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+21,Johann,Müller,,M,1852-06-30,1930-01-01,Innsbruck,Österreich,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+22,Anna,Müller,Huber,F,1855-11-08,1935-07-19,Innsbruck,Österreich,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+23,Miko,Maschuk,,D,1840-11-08,1935-07-19,Kiev,Ukraine,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+24,Goldin,Barochov,,M,1839-11-08,1935-07-19,Innsbruck,Österreich,,,,,,,,,,aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+25,Tenant,Beta,,M,1980-01-01,,London,England,,,,,,,,,,bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+26,Beta,User,,F,1985-06-15,,London,England,,,,,,,,,,bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb

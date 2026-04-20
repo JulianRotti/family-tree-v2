@@ -18,6 +18,8 @@ quarkus:
     password: dev_user
     jdbc:
       url: jdbc:mysql://localhost:3307/family_tree
+  hibernate-orm:
+    multitenant: DISCRIMINATOR
   swagger-ui:
     always-include: true
     oauth-client-id: family-tree-swagger

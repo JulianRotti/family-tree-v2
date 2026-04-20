@@ -2,10 +2,12 @@ package org.lunskra.adapter.api.resource;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.SecurityAttribute;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.lunskra.adapter.TestTenantConstants;
 import org.lunskra.adapter.persistence.testcontainer.MySQLTestContainerResource;
 
 import static io.restassured.RestAssured.given;
@@ -13,7 +15,7 @@ import static org.hamcrest.Matchers.is;
 
 @QuarkusTest
 @QuarkusTestResource(value = MySQLTestContainerResource.class, restrictToAnnotatedClass = true)
-@TestSecurity(user = "testuser", roles = {"view", "create", "edit", "delete"})
+@TestSecurity(user = "testuser", roles = {"view", "create", "edit", "delete"}, attributes = {@SecurityAttribute(key = TestTenantConstants.TENANT_ID_KEY, value = TestTenantConstants.TENANT_A_ID)})
 class FamilyTreeResourceIntegrationTest {
 
     private static final String API_FAMILY_TREE = "/api/family-tree/{memberId}";

@@ -1,25 +1,54 @@
-id,first_name,last_name,initial_last_name,gender,birth_date,death_date,birth_city,birth_country,birth_lat,birth_lng,email,telephone,street_number,plz,city,occupation,notes
-1,Hans,Horn,Buchner,M,1930-01-01,2020-02-01,München,Deutschland,,,hans@horn.de,89349421412,Grimmstr. 5,80336,München,Hausmeister,note
-2,Fatima,Horn,,F,1990-03-09,,München,Deutschland,,,fatima@horn.de,14257172152,Poccistr. 1,80336,München,Bäckerin,testnote
-3,Greta,Horn,Bauer,F,1950-06-10,,München,Deutschland,,,,,,,,,
-4,Ahmed,Horn,,M,1950-06-02,,Berlin,Deutschland,,,,,,,,,,
-5,Chantal,Horn,,F,1988-03-22,,Berlin,Deutschland,,,,,Lindwurmstr. 5,80336,München,,
-6,Kenji,Horn,,M,1991-02-21,,Berlin,Deutschland,,,kenji@horn.de,,,,,,
-7,Maria,Cortez,,F,1991-05-29,,Madrid,Spanien,,,,,,,,,,
-8,Amina,Horn,,F,1930-01-01,2024-01-01,Madrid,Spanien,,,,,,,,,,
-9,Luca,Friedenthal,,M,2000-01-01,,Madrid,Spanien,,,,,,,,,,
-10,Omar,Friedenthal,,M,2000-01-01,,Hamburg,Deutschland,,,,,,,,,note
-11,Miguel,Cortez,,M,2000-01-01,,Hamburg,Deutschland,,,,,,,,Beraterin,
-12,Naomi,Friedenthal,,F,1990-01-01,,Hamburg,Deutschland,,,,,,,,,note
-13,Sofia,Horn,,F,1990-01-01,,Hamburg,Deutschland,,,,,,,,CEO,toll
-14,Friedrich,Horn,,M,1905-03-15,,Wien,Österreich,,,,,,,,,,
-15,Helene,Horn,Müller,F,1908-07-22,,Wien,Österreich,,,,,,,,,,
-16,Ernst,Horn,,M,1878-05-10,1950-11-03,Salzburg,Österreich,,,,,,,,,,
-17,Berta,Horn,Klein,F,1880-02-28,1945-06-15,Salzburg,Österreich,,,,,,,,,,
-18,Karl,Müller,,M,1880-09-01,,Graz,Österreich,,,,,,,,,,
-19,Rosa,Müller,Steiner,F,1882-04-17,,Graz,Österreich,,,,,,,,,,
-20,Wilhelm,Horn,,M,1850-01-12,1920-03-04,Linz,Österreich,,,,,,,,,,
-21,Johann,Müller,,M,1852-06-30,1930-01-01,Innsbruck,Österreich,,,,,,,,,,
-22,Anna,Müller,Huber,F,1855-11-08,1935-07-19,Innsbruck,Österreich,,,,,,,,,,
-23,Miko,Maschuk,,D,1840-11-08,1935-07-19,Kiev,Ukraine,,,,,,,,,,
-24,Goldin,Barochov,,M,1839-11-08,1935-07-19,Innsbruck,Österreich,,,,,,,,,,
+id,first_name,last_name,initial_last_name,gender,birth_date,death_date,birth_city,birth_country,birth_lat,birth_lng,email,telephone,street_number,plz,city,occupation,notes,tenant_id
+1,Heinrich,Meyer,,M,1940-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Mechanic,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+2,Elisabeth,Meyer,Schmidt,F,1945-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Teacher,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+3,Klaus,Meyer,,M,1965-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Engineer,Tolle Person,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+4,Petra,Meyer,,F,1967-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Nurse,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+5,Thomas,Meyer,,M,1970-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Driver,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+6,Sabine,Meyer,,F,1972-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Clerk,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+7,Michael,Meyer,,M,1975-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Electrician,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+8,Anna,Klein,,F,1966-01-01,,Bremen,Germany,,,,,,12345,Bremen,Teacher,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+9,Jürgen,Becker,,M,1964-01-01,,Cologne,Germany,,,,,,12345,Cologne,Mechanic,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+10,Stefan,Wagner,,M,1970-01-01,,Munich,Germany,,,,,,12345,Munich,Chef,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+11,Claudia,Fischer,,F,1976-01-01,,Stuttgart,Germany,,,,,,12345,Stuttgart,Nurse,Tolle Person,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+12,Daniel,Meyer,,M,1990-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Developer,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+13,Laura,Meyer,,F,1992-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Designer,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+14,Jan,Becker,,M,1991-01-01,,Cologne,Germany,,,,,,12345,Cologne,Engineer,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+15,Lena,Becker,,F,1993-01-01,,Cologne,Germany,,,,,,12345,Cologne,Teacher,Tolle Person,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+16,Tim,Becker,,M,1995-01-01,,Cologne,Germany,,,,,,12345,Cologne,Student,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+17,Julia,Meyer,,F,1998-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Nurse,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+18,Markus,Meyer,,M,2000-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Student,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+19,Leon,Meyer,,M,1999-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Engineer,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+20,Sophie,Meyer,,F,2002-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Student,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+21,Max,Meyer,,M,2005-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Student,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+22,Emma,Schulz,,F,1991-01-01,,Berlin,Germany,,,,,,12345,Berlin,Doctor,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+23,Nina,Hoffmann,,F,1989-01-01,,Berlin,Germany,,,,,,12345,Berlin,Designer,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+24,Florian,Koch,,M,1988-01-01,,Düsseldorf,Germany,,,,,,12345,Düsseldorf,Architect,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+25,Lukas,Bauer,,M,1997-01-01,,Munich,Germany,,,,,,12345,Munich,Engineer,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+26,Felix,Schneider,,M,1996-01-01,,Frankfurt,Germany,,,,,,12345,Frankfurt,Consultant,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+27,Maria,Weber,,F,1998-01-01,,Leipzig,Germany,,,,,,12345,Leipzig,Teacher,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+28,Paul,Meyer,,M,2018-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+29,Marie,Meyer,,F,2020-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+30,Elias,Meyer,,M,2022-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+31,Jonas,Meyer,,M,2015-01-01,,Berlin,Germany,,,,,,12345,Berlin,Student,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+32,Noah,Becker,,M,2016-01-01,,Cologne,Germany,,,,,,12345,Cologne,Student,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+33,Mia,Becker,,F,2018-01-01,,Cologne,Germany,,,,,,12345,Cologne,Student,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+34,Emma,Becker,,F,2020-01-01,,Cologne,Germany,,,,,,12345,Cologne,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+35,Leo,Becker,,M,2022-01-01,,Cologne,Germany,,,,,,12345,Cologne,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+36,Lina,Meyer,,F,2023-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+37,Tom,Meyer,,M,2021-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+38,Clara,Meyer,,F,2023-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+39,Ben,Meyer,,M,2025-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+40,Hannah,Meyer,,F,2022-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+41,Sarah,Krause,,F,1996-01-01,,Berlin,Germany,,,,,,12345,Berlin,Lawyer,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+42,Jonas,Meyer,,M,2024-01-01,,Berlin,Germany,,,,,,12345,Berlin,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+43,Lea,Meyer,,F,2025-01-01,,Berlin,Germany,,,,,,12345,Berlin,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+44,Paul,Meyer,,M,2026-01-01,,Berlin,Germany,,,,,,12345,Berlin,Baby,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+45,Alexander,Schulz,,M,1968-01-01,,Berlin,Germany,,,,,,12345,Berlin,Manager,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+46,Katrin,Koch,,F,1970-01-01,,Düsseldorf,Germany,,,,,,12345,Düsseldorf,Teacher,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+47,Martin,Bauer,,M,1972-01-01,,Munich,Germany,,,,,,12345,Munich,Engineer,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+48,Heike,Schneider,,F,1971-01-01,,Frankfurt,Germany,,,,,,12345,Frankfurt,Accountant,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+49,Peter,Weber,,M,1973-01-01,,Leipzig,Germany,,,,,,12345,Leipzig,Clerk,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+50,Ursula,Krause,,F,1974-01-01,,Berlin,Germany,,,,,,12345,Berlin,Nurse,,c6d8fe9f-33b5-42bc-a767-0c1257cc8e10
+51,Heinrich,Meyer,,M,1940-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Mechanic,,c6d8fe9f-33b5-42bc-aaaa-0c1257cc8aaa
+52,Carolin,Meyer,,M,1940-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Mechanic,,c6d8fe9f-33b5-42bc-aaaa-0c1257cc8aaa
+53,Heinrich Junior,Meyer,,M,1960-01-01,,Hamburg,Germany,,,,,,12345,Hamburg,Mechanic,,c6d8fe9f-33b5-42bc-aaaa-0c1257cc8aaa

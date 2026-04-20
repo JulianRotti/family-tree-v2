@@ -5,6 +5,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.lunskra.adapter.security.TenantContext;
 import org.lunskra.core.domain.FamilyTreeComponents;
 import org.lunskra.core.domain.Gender;
 import org.lunskra.core.domain.Member;
@@ -32,27 +34,31 @@ import java.util.List;
  * the adapter unwraps the underlying JDBC connection and maps the
  * {@link java.sql.ResultSet rows} manually.
  */
+@Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
 public class FamilyTreeRepositoryPortImpl implements FamilyTreeRepositoryPort {
 
     private final EntityManager em;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public FamilyTreeComponents getFamilyTreeComponents(Integer headOfFamilyId, Integer maxDepth) {
-        return callProcedure(headOfFamilyId, maxDepth, "{CALL get_family_tree(?, ?)}");
+        return callProcedure(headOfFamilyId, maxDepth, "{CALL get_family_tree(?, ?, ?)}");
     }
 
     @Override
     public FamilyTreeComponents getFamilyTreeAncestorComponents(Integer childOfFamilyId, Integer maxDepth) {
-        return callProcedure(childOfFamilyId, maxDepth, "{CALL get_family_tree_reverse(?, ?)}");
+        return callProcedure(childOfFamilyId, maxDepth, "{CALL get_family_tree_reverse(?, ?, ?)}");
     }
 
     public FamilyTreeComponents callProcedure(Integer memberId, Integer maxDepth, String procedure) {
         List<Member> members = new ArrayList<>();
         List<Relationship> relationships = new ArrayList<>();
+        String currentTenantId = tenantContext.getTenantId();
 
+        log.debug("Calling stored procedure {} for memberId={}, maxDepth={}", procedure, memberId, maxDepth);
         em.unwrap(org.hibernate.Session.class).doWork(connection -> {
             try (CallableStatement stmt = connection.prepareCall(procedure)) {
 
@@ -62,6 +68,7 @@ public class FamilyTreeRepositoryPortImpl implements FamilyTreeRepositoryPort {
                 } else {
                     stmt.setNull(2, Types.INTEGER);
                 }
+                stmt.setString(3, currentTenantId);
 
                 boolean hasResults = stmt.execute();
 
