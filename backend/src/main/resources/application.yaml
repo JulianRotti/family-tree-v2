@@ -40,3 +40,4 @@ minio:
   access-key: ${MINIO_ACCESS_KEY}
   secret-key: ${MINIO_SECRET_KEY}
   bucket: ${MINIO_BUCKET:member-images}
+  region: ${MINIO_REGION:us-east-1}

@@ -39,6 +39,9 @@ public class MinioStorageAdapter implements ImageStoragePort {
     @ConfigProperty(name = "minio.bucket")
     String bucket;
 
+    @ConfigProperty(name = "minio.region", defaultValue = "us-east-1")
+    String region;
+
     private MinioClient minioClient;
     private MinioClient minioPublicClient;
 
@@ -47,6 +50,7 @@ public class MinioStorageAdapter implements ImageStoragePort {
         minioClient = MinioClient.builder()
                 .endpoint(endpoint)
                 .credentials(accessKey, secretKey)
+                .region(region)
                 .build();
 
         // The public client signs URLs with the public endpoint (e.g. localhost:9000)
@@ -59,6 +63,7 @@ public class MinioStorageAdapter implements ImageStoragePort {
         minioPublicClient = MinioClient.builder()
                 .endpoint(publicEndpoint)
                 .credentials(accessKey, secretKey)
+                .region(region)
                 .httpClient(routingHttpClient)
                 .build();
 
